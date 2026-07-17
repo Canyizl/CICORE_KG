@@ -27,7 +27,7 @@
       height: 8vh;
       background: linear-gradient(90deg, #082042, #0f346d, #082042);
       border-bottom: 1px solid #00a8ff;
-      display: flex;
+      display:flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 15px #00a8ff40;
@@ -154,11 +154,34 @@
       display: flex;
       flex-direction: column;
     }
+    /* 发言人栏 水平布局 */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
     .chat-speaker {
       font-size: 1.1rem;
       color: #00ffc8;
       font-weight: bold;
-      margin-bottom: 8px;
+    }
+    /* 音频控制喇叭按钮 */
+    .audio-control-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #00ffc8;
+      border-radius: 4px;
+      color: #00ffc8;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .audio-control-btn:hover {
+      background: #00ffc830;
     }
     .chat-content-box {
       flex: 1;
@@ -183,22 +206,21 @@
   <header class="header-bar">
     <h1 class="main-title">AI智慧交投</h1>
   </header>
-
   <!-- 主内容区 -->
   <div class="main-container">
     <!-- 左侧 Neo4j知识图谱容器 -->
     <div class="graph-wrap">
       <div class="graph-title">交投知识图谱（Neo4j）</div>
       <div id="neo4j-graph">
-        <!-- 节点操作悬浮菜单 -->
+        <!-- 节点操作悬浮菜单 新增播放音频项 -->
         <div class="node-menu" id="nodeMenu">
           <div class="node-menu-item" data-action="expand">展开</div>
           <div class="node-menu-item" data-action="collapse">收缩</div>
           <div class="node-menu-item" data-action="intro">介绍</div>
+          <div class="node-menu-item" data-action="playAudio">播放音频</div>
         </div>
       </div>
     </div>
-
     <!-- 右侧：数字人 + 对话区 -->
     <div class="right-wrap">
       <!-- 数字人展示 3/4高度 -->
@@ -206,22 +228,54 @@
         <div class="human-title">AI数字人交互终端</div>
         <div id="digital-human-box">数字人渲染占位区域</div>
       </div>
-
       <!-- 对话弹窗 1/4高度 -->
       <div class="chat-wrap">
-        <div class="chat-speaker">发言人：CICO</div>
+        <!-- 发言人头部栏：文字+喇叭按钮同行 -->
+        <div class="chat-header">
+          <div class="chat-speaker">发言人：CICO</div>
+          <!-- 喇叭静音切换按钮 -->
+          <div class="audio-control-btn" id="audioBtn">🔊</div>
+        </div>
         <div class="chat-content-box" id="chat-text">
           <p>等待数字人应答...</p>
         </div>
       </div>
     </div>
   </div>
-
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    // ===================== 1. 数据层：Excel数据源（新增Intro字段） =====================
+    // ===================== 全局音频实例 新增 =====================
+    let globalAudio = new Audio();
+    const audioBtn = document.getElementById("audioBtn");
+    // 喇叭图标常量
+    const ICON_VOLUME = "🔊"; // 有声
+    const ICON_MUTE = "🔇";  // 静音/暂停
+
+    // 一键暂停所有音频，重置播放进度
+    function stopCurrentAudio() {
+      if (!globalAudio.paused) {
+        globalAudio.pause();
+        globalAudio.currentTime = 0;
+        audioBtn.textContent = ICON_MUTE;
+        updateChatText(`CICO：已暂停全部音频播放`);
+      }
+    }
+
+    // 喇叭按钮点击事件：暂停音频
+    audioBtn.addEventListener("click", () => {
+      stopCurrentAudio();
+    });
+
+    // 监听音频播放事件，切换喇叭图标
+    globalAudio.addEventListener("play", () => {
+      audioBtn.textContent = ICON_VOLUME;
+    });
+    globalAudio.addEventListener("pause", () => {
+      audioBtn.textContent = ICON_MUTE;
+    });
+
+    // ===================== 1. 数据层：Excel数据源（新增audioUrl音频地址字段） =====================
     /**
      * 模拟Excel原始数据，完全匹配Excel表格结构，后续可直接读取真实Excel替换
      * 字段说明：
@@ -230,6 +284,8 @@
      *  childName: 子节点名称
      *  parentIntro: 父节点介绍文本（点击介绍按钮展示）
      *  childIntro: 子节点介绍文本（点击介绍按钮展示）
+     *  parentAudio: 父节点音频文件地址
+     *  childAudio: 子节点音频文件地址
      */
     const excelRawData = [
       { 
@@ -237,17 +293,20 @@
         rel: "子公司", 
         childName: "技术总院", 
         parentIntro: "集团总部是交投集团的核心管理机构，负责集团整体战略规划、投融资管理与运营管控，是集团的决策中枢。",
-        childIntro: "技术总院是交投集团的核心技术研发机构，负责交通领域前沿技术研发、智慧交通项目落地与技术成果转化。"
+        childIntro: "技术总院是交投集团的核心技术研发机构，负责交通领域前沿技术研发、智慧交通项目落地与技术成果转化。",
+        parentAudio: "./audio/1.mp3",
+        childAudio: "./audio/2.mp3"
       },
       { 
         parentName: "集团总部", 
         rel: "子公司", 
         childName: "浙商证券",
         parentIntro: "集团总部是交投集团的核心管理机构，负责集团整体战略规划、投融资管理与运营管控，是集团的决策中枢。",
-        childIntro: "浙商证券是交投集团旗下上市金融平台，专注于证券经纪、投资银行、资产管理、私募股权投资等金融业务。"
+        childIntro: "浙商证券是交投集团旗下上市金融平台，专注于证券经纪、投资银行、资产管理、私募股权投资等金融业务。",
+        parentAudio: "./audio/1.mp3",
+        childAudio: "./audio/2.mp3"
       }
     ];
-
     // 全局完整图谱数据（原始总数据，不做删减）
     let fullGraphData = { nodes: [], links: [] };
     // 当前渲染展示图谱数据
@@ -258,10 +317,9 @@
     let currentOperateNode = null;
     // 节点操作菜单DOM
     const nodeMenu = document.getElementById("nodeMenu");
-
     // ===================== 2. 数据解析工具函数（Excel转图谱结构） =====================
     /**
-     * 解析Excel数组，生成标准nodes、links图谱数据，绑定Intro介绍文本
+     * 解析Excel数组，生成标准nodes、links图谱数据，绑定Intro介绍文本+音频地址
      * @param {Array} excelArr 模拟Excel行数据
      * @returns {Object} {nodes, links}
      */
@@ -269,7 +327,6 @@
       const nodeMap = new Map();
       const links = [];
       let nodeId = 1;
-
       // 生成唯一节点ID
       const getNodeId = (name) => {
         if (!nodeMap.has(name)) {
@@ -277,12 +334,11 @@
         }
         return nodeMap.get(name);
       };
-
       // 遍历Excel数据，生成节点和连线
       excelArr.forEach(row => {
         const pId = getNodeId(row.parentName);
         const cId = getNodeId(row.childName);
-        // 生成连线，绑定关系和Intro
+        // 生成连线，绑定关系、Intro、音频地址
         links.push({
           source: pId,
           target: cId,
@@ -290,28 +346,34 @@
           parentName: row.parentName,
           childName: row.childName,
           parentIntro: row.parentIntro,
-          childIntro: row.childIntro
+          childIntro: row.childIntro,
+          parentAudio: row.parentAudio,
+          childAudio: row.childAudio
         });
       });
-
-      // 生成节点数组，绑定Intro介绍文本
+      // 生成节点数组，绑定Intro介绍文本+音频地址
       const nodes = Array.from(nodeMap.entries()).map(([name, id]) => {
         // 节点默认全部收缩，仅根节点（集团总部）初始可展开
         nodeExpandStatus.set(name, false);
+        // 匹配节点对应的音频地址
+        let nodeAudioUrl = "";
+        if(name === "集团总部"){
+          nodeAudioUrl = links.find(l => l.parentName === name)?.parentAudio || "";
+        }else{
+          nodeAudioUrl = links.find(l => l.childName === name)?.childAudio || "";
+        }
         return {
           id,
           name,
           type: name === "集团总部" ? "group" : "org",
-          // 绑定节点对应的Intro文本
           intro: name === "集团总部" 
             ? links.find(l => l.parentName === name)?.parentIntro || ""
-            : links.find(l => l.childName === name)?.childIntro || ""
+            : links.find(l => l.childName === name)?.childIntro || "",
+          audioUrl: nodeAudioUrl // 节点音频地址
         };
       });
-
       return { nodes, links };
     }
-
     /**
      * 根据节点展开状态过滤需要渲染的节点/连线（核心：初始仅显示根节点）
      */
@@ -319,7 +381,6 @@
       const showNodeNames = new Set();
       // 1. 初始强制加入根节点（集团总部），保证初始状态仅显示根节点
       showNodeNames.add("集团总部");
-
       // 2. 递归遍历，根据展开状态判断是否显示子节点
       function checkChild(parentName) {
         if (!nodeExpandStatus.get(parentName)) return;
@@ -331,14 +392,12 @@
         });
       }
       checkChild("集团总部");
-
       // 3. 过滤节点和连线
       showGraphData.nodes = fullGraphData.nodes.filter(n => showNodeNames.has(n.name));
       showGraphData.links = fullGraphData.links.filter(l =>
         showNodeNames.has(l.parentName) && showNodeNames.has(l.childName)
       );
     }
-
     // ===================== 3. 图谱渲染核心函数 =====================
     function getNodeColor(type) {
       switch (type) {
@@ -347,25 +406,21 @@
         default: return "#fff";
       }
     }
-
     function renderGraph() {
       const container = document.getElementById("neo4j-graph");
       const width = container.clientWidth;
       const height = container.clientHeight;
       // 清空旧画布
       d3.select("#neo4j-graph svg").remove();
-
       const svg = d3.select("#neo4j-graph")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
-
       // 力学布局
       const simulation = d3.forceSimulation(showGraphData.nodes)
         .force("link", d3.forceLink(showGraphData.links).id(d => d.id).distance(200))
         .force("charge", d3.forceManyBody().strength(-500))
         .force("center", d3.forceCenter(width / 2, height / 2));
-
       // 1. 绘制连线
       const link = svg.append("g")
         .selectAll("line")
@@ -373,7 +428,6 @@
         .enter()
         .append("line")
         .attr("class", "link-line");
-
       // 2. 绘制连线关系标签（展开后显示关系名称）
       const linkRelText = svg.append("g")
         .selectAll("text")
@@ -382,7 +436,6 @@
         .append("text")
         .attr("class", "link-rel-text")
         .text(d => d.rel);
-
       // 3. 绘制节点圆
       const node = svg.append("g")
         .selectAll("circle")
@@ -405,7 +458,6 @@
           nodeMenu.style.top = (rect.top - containerRect.top - 30) + "px";
           nodeMenu.style.display = "block";
         });
-
       // 4. 绘制节点文字
       const text = svg.append("g")
         .selectAll("text")
@@ -414,7 +466,6 @@
         .append("text")
         .attr("class", "node-text")
         .text(d => d.name);
-
       // 力学更新每一帧
       simulation.on("tick", () => {
         // 更新连线位置
@@ -423,23 +474,19 @@
           .attr("y1", d => d.source.y)
           .attr("x2", d => d.target.x)
           .attr("y2", d => d.target.y);
-
         // 更新连线关系标签位置（连线中点）
         linkRelText
           .attr("x", d => (d.source.x + d.target.x) / 2)
           .attr("y", d => (d.source.y + d.target.y) / 2 - 8);
-
         // 更新节点位置
         node
           .attr("cx", d => d.x = Math.max(35, Math.min(width - 35, d.x)))
           .attr("cy", d => d.y = Math.max(35, Math.min(height - 35, d.y)));
-
         // 更新节点文字位置
         text
           .attr("x", d => d.x)
           .attr("y", d => d.y + 6);
       });
-
       // 拖拽逻辑
       function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -453,20 +500,18 @@
         d.fx = null; d.fy = null;
       }
     }
-
     // 点击空白区域关闭菜单
     document.getElementById("neo4j-graph").addEventListener("click", (e) => {
       if (e.target.id === "neo4j-graph") nodeMenu.style.display = "none";
     });
-
-    // ===================== 4. 节点菜单动作处理 =====================
+    // ===================== 4. 节点菜单动作处理 新增playAudio分支 =====================
     document.querySelectorAll(".node-menu-item").forEach(item => {
       item.addEventListener("click", () => {
         const action = item.dataset.action;
         const nodeName = currentOperateNode.name;
         const nodeIntro = currentOperateNode.intro;
+        const audioSrc = currentOperateNode.audioUrl;
         nodeMenu.style.display = "none";
-
         switch (action) {
           case "expand":
             // 展开节点：设置展开状态为true，重新过滤渲染
@@ -486,10 +531,23 @@
             // 介绍节点：展示节点绑定的Intro文本
             updateChatText(`CICO：【${nodeName}】介绍：${nodeIntro}`);
             break;
+          case "playAudio":
+            // 播放节点音频 新增逻辑
+            if(!audioSrc){
+              updateChatText(`CICO：【${nodeName}】暂无绑定音频文件`);
+              return;
+            }
+            stopCurrentAudio();
+            globalAudio.src = audioSrc;
+            globalAudio.play().then(()=>{
+              updateChatText(`CICO：正在播放【${nodeName}】音频，音频地址：${audioSrc}`);
+            }).catch(err=>{
+              updateChatText(`CICO：音频播放失败，错误信息：${err.message}`);
+            });
+            break;
         }
       });
     });
-
     // ===================== 5. 对话框公共方法 =====================
     function updateChatText(text) {
       const chatBox = document.getElementById("chat-text");
@@ -498,12 +556,10 @@
       chatBox.appendChild(p);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
-
     // ===================== 6. 数字人初始化占位 =====================
     function initDigitalHuman() {
       console.log("数字人容器初始化完成");
     }
-
     // ===================== 7. 页面入口初始化 =====================
     window.onload = function () {
       // 1. 解析Excel数据生成完整图谱
@@ -515,7 +571,7 @@
       // 4. 初始化数字人
       initDigitalHuman();
       // 初始提示消息
-      updateChatText("CICO：知识图谱加载完成，初始仅显示根节点，点击节点可展开/收缩/查看节点介绍");
+      updateChatText("CICO：知识图谱加载完成，初始仅显示根节点，点击节点可展开/收缩/查看节点介绍/播放节点音频，右上角喇叭按钮可一键暂停所有音频");
     }
   </script>
 </body>
