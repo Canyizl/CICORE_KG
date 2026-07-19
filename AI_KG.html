@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>浙江交通集团 · 企业文化知识图谱</title>
+    <title>浙江交通集团 · 企业文化知识图谱 V5</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -485,7 +485,11 @@
             object-fit: contain;
             background: transparent;
             border-radius: 11px;
+            opacity: 0;
+            transition: opacity .18s ease;
+            pointer-events: none;
         }
+        .human-video.active { opacity: 1; }
         .human-video.hidden { display: none; }
         .video-badge {
             position: absolute;
@@ -497,6 +501,18 @@
             border: 1px solid #50dfad55;
             background: #07151dcc;
             color: #8fe7ca;
+            font-size: 7px;
+        }
+        .action-state {
+            position: absolute;
+            z-index: 6;
+            right: 10px;
+            bottom: 9px;
+            padding: 4px 7px;
+            border-radius: 99px;
+            border: 1px solid color-mix(in srgb, var(--sel) 55%, transparent);
+            background: #07151dcc;
+            color: #c4e9ef;
             font-size: 7px;
         }
         .ring {
@@ -913,19 +929,20 @@
                     
                     <div class="human-slot">
                         <video
-                            ref="digitalHumanVideo"
+                            ref="humanVideoA"
                             class="human-video"
-                            :class="{hidden: videoError}"
-                            src="./aihuman/cicoAI.mp4"
-                            autoplay
-                            muted
-                            loop
-                            playsinline
-                            preload="auto"
-                            @loadeddata="videoLoaded = true"
-                            @play="isSpeaking = true"
-                            @pause="isSpeaking = false"
-                            @error="videoError = true"
+                            :class="{active: activeHumanSlot === 'a', hidden: videoError}"
+                            src="./aihuman/Stand.webm"
+                            autoplay muted loop playsinline preload="auto"
+                            @loadeddata="onHumanVideoReady"
+                            @error="onHumanVideoError"
+                        ></video>
+                        <video
+                            ref="humanVideoB"
+                            class="human-video"
+                            :class="{active: activeHumanSlot === 'b', hidden: videoError}"
+                            muted playsinline preload="auto"
+                            @error="onHumanVideoError"
                         ></video>
                         <template v-if="videoError">
                         <div class="ring"></div>
@@ -935,9 +952,10 @@
                             <div class="body"></div>
                             <div class="core"></div>
                         </div>
-                        <div class="slot-text">数字人视频加载失败，请检查 cicoAI.mp4</div>
+                        <div class="slot-text">数字人动作加载失败，请检查 aihuman 文件夹</div>
                         </template>
-                        <span v-else class="video-badge">{{ videoLoaded ? 'cicoAI.mp4 · 已接入' : '正在加载数字人视频...' }}</span>
+                        <span v-else class="video-badge">{{ videoLoaded ? '动作资源已预加载' : '正在加载数字人动作...' }}</span>
+                        <span v-if="!videoError" class="action-state">{{ humanStateLabel }}</span>
                     </div>
                     
                     <!-- 语音播报音频元素 -->
@@ -946,7 +964,7 @@
                     <div class="human-actions">
                         <button class="voice" @click="playNarration">▶ 播放播报</button>
                         <button class="voice stop" @click="stopNarration">■ 中断播报</button>
-                        <small>{{ videoError ? '视频不可用' : 'H.264 MP4 · 循环播放' }}</small>
+                        <small>{{ videoError ? '动作视频不可用' : 'WebM 动作状态机 · ' + humanStateLabel }}</small>
                     </div>
                 </section>
 
@@ -987,7 +1005,7 @@
     </div>
 
     <script>
-    const { createApp, reactive, computed, ref, onMounted, nextTick } = Vue;
+    const { createApp, reactive, computed, ref, onMounted, onBeforeUnmount, nextTick } = Vue;
 
     // ==================== 配置常量 ====================
     const CONFIG = {
@@ -1316,7 +1334,10 @@
             const activeTab = ref('overview');
             const isSpeaking = ref(false);
             const selectedNode = ref(null);
-            const digitalHumanVideo = ref(null);
+            const humanVideoA = ref(null);
+            const humanVideoB = ref(null);
+            const activeHumanSlot = ref('a');
+            const humanState = ref('stand');
             const videoLoaded = ref(false);
             const videoError = ref(false);
             const narrationAudio = ref(null);
@@ -1325,6 +1346,24 @@
             const showFollowup = ref(false);
             const showGraduateVideo = ref(false);
             const graphContainer = ref(null);
+            const HUMAN_ACTIONS = {
+                stand: './aihuman/Stand.webm',
+                greeting: './aihuman/SayHi.webm',
+                standToSpeak: './aihuman/StandToSpeak.webm',
+                speaking: './aihuman/Speak.webm',
+                speakToStand: './aihuman/SpeakToStand.webm'
+            };
+            const humanStateNames = {
+                stand: '静止待机',
+                greeting: '打招呼',
+                standToSpeak: '准备讲解',
+                speaking: '正在讲话',
+                speakToStand: '结束讲解'
+            };
+            let humanActionToken = 0;
+            let pendingHumanResolve = null;
+            let narrationSession = 0;
+            const preloadedHumanVideos = [];
             
             // 背景图相关
             const currentBgImage = ref('');
@@ -1424,6 +1463,7 @@
                     ? '是否需要观看应届生视频？'
                     : '是否继续介绍企业文化或企业简介？';
             });
+            const humanStateLabel = computed(() => humanStateNames[humanState.value] || '待机');
 
             const backgroundStyle = computed(() => ({
                 '--user-bg': backgroundImage.value ? `url("${backgroundImage.value}")` : 'none',
@@ -1494,6 +1534,115 @@
                 }
             }
 
+            // ===== 数字人动作状态机 =====
+            function onHumanVideoReady() {
+                videoLoaded.value = true;
+                videoError.value = false;
+            }
+            function onHumanVideoError(event) {
+                console.error('数字人动作视频加载失败：', event?.target?.currentSrc || '');
+                videoError.value = true;
+            }
+            function preloadHumanActions() {
+                Object.values(HUMAN_ACTIONS).forEach(src => {
+                    const video = document.createElement('video');
+                    video.preload = 'auto';
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.src = src;
+                    video.load();
+                    preloadedHumanVideos.push(video);
+                });
+            }
+            function waitForVideoReady(video, token) {
+                if (video.readyState >= 3) return Promise.resolve(true);
+                return new Promise(resolve => {
+                    let settled = false;
+                    const finish = value => {
+                        if (settled) return;
+                        settled = true;
+                        video.removeEventListener('canplay', ready);
+                        video.removeEventListener('error', failed);
+                        clearTimeout(timeout);
+                        resolve(value && token === humanActionToken);
+                    };
+                    const ready = () => finish(true);
+                    const failed = () => finish(false);
+                    const timeout = setTimeout(() => finish(video.readyState >= 2), 4500);
+                    video.addEventListener('canplay', ready, { once: true });
+                    video.addEventListener('error', failed, { once: true });
+                });
+            }
+            async function playHumanAction(action, options = {}) {
+                const src = HUMAN_ACTIONS[action];
+                if (!src || videoError.value) return false;
+                if (pendingHumanResolve) {
+                    pendingHumanResolve(false);
+                    pendingHumanResolve = null;
+                }
+                const token = ++humanActionToken;
+                const nextSlot = activeHumanSlot.value === 'a' ? 'b' : 'a';
+                const target = nextSlot === 'a' ? humanVideoA.value : humanVideoB.value;
+                const previous = activeHumanSlot.value === 'a' ? humanVideoA.value : humanVideoB.value;
+                if (!target) return false;
+                target.onended = null;
+                target.loop = !!options.loop;
+                target.muted = true;
+                target.src = src;
+                target.currentTime = 0;
+                target.load();
+                const ready = await waitForVideoReady(target, token);
+                if (!ready || token !== humanActionToken) return false;
+                try {
+                    await target.play();
+                } catch (error) {
+                    console.error('数字人动作无法播放：', action, error);
+                    return false;
+                }
+                humanState.value = action;
+                activeHumanSlot.value = nextSlot;
+                setTimeout(() => {
+                    if (previous && previous !== target) previous.pause();
+                }, 220);
+                if (options.loop || !options.waitForEnd) return true;
+                return new Promise(resolve => {
+                    let done = false;
+                    const finish = value => {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timeout);
+                        if (pendingHumanResolve === finish) pendingHumanResolve = null;
+                        resolve(value && token === humanActionToken);
+                    };
+                    pendingHumanResolve = finish;
+                    target.onended = () => finish(true);
+                    const maxWait = Number.isFinite(target.duration) ? Math.max(3000, target.duration * 1000 + 1200) : 12000;
+                    const timeout = setTimeout(() => finish(true), maxWait);
+                });
+            }
+            async function playGreeting() {
+                if (isSpeaking.value || videoError.value) return;
+                const completed = await playHumanAction('greeting', { waitForEnd: true });
+                if (completed && !isSpeaking.value) await playHumanAction('stand', { loop: true });
+            }
+            async function enterSpeakingState(session) {
+                if (videoError.value) return true;
+                if (humanState.value !== 'speaking') {
+                    const completed = await playHumanAction('standToSpeak', { waitForEnd: true });
+                    if (!completed || session !== narrationSession) return false;
+                    await playHumanAction('speaking', { loop: true });
+                }
+                return session === narrationSession;
+            }
+            async function returnToStand() {
+                if (videoError.value || humanState.value === 'stand') return;
+                if (humanState.value === 'speaking' || humanState.value === 'standToSpeak') {
+                    const completed = await playHumanAction('speakToStand', { waitForEnd: true });
+                    if (!completed) return;
+                }
+                await playHumanAction('stand', { loop: true });
+            }
+
             // ===== 语音播报 =====
             function resolveMediaPath(path) {
                 const value = String(path || '').trim();
@@ -1512,8 +1661,10 @@
                 isSpeaking.value = false;
             }
             function onNarrationEnd() {
+                narrationSession++;
                 isSpeaking.value = false;
                 showFollowup.value = true;
+                returnToStand();
             }
             function speakWithBrowser() {
                 if (!('speechSynthesis' in window)) {
@@ -1540,8 +1691,11 @@
                 window.speechSynthesis.speak(utterance);
             }
             async function playNarration() {
-                stopNarration();
+                stopNarration(false);
+                const session = ++narrationSession;
                 showFollowup.value = false;
+                const actionReady = await enterSpeakingState(session);
+                if (!actionReady || session !== narrationSession) return;
                 const audioPath = selectedNode.value?.audioPath;
                 if (audioPath && narrationAudio.value) {
                     try {
@@ -1555,7 +1709,8 @@
                 }
                 speakWithBrowser();
             }
-            function stopNarration() {
+            function stopNarration(animate = true) {
+                narrationSession++;
                 if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                 if (narrationAudio.value) {
                     narrationAudio.value.pause();
@@ -1564,6 +1719,7 @@
                 speechUtterance.value = null;
                 isSpeaking.value = false;
                 showFollowup.value = false;
+                if (animate) returnToStand();
             }
             function onAudioError() {
                 if (selectedNode.value?.audioPath && !isSpeaking.value) {
@@ -1910,6 +2066,7 @@
                 switchBackground(node);
                 if (node.type === 'company') {
                     filter.value = node.sector;
+                    nextTick(() => playGreeting());
                 } else if (node.type === 'sector') {
                     filter.value = node.id;
                 } else {
@@ -1977,6 +2134,26 @@
 
             onMounted(() => {
                 initializeData();
+                preloadHumanActions();
+                nextTick(() => {
+                    const standVideo = humanVideoA.value;
+                    if (standVideo) {
+                        standVideo.loop = true;
+                        standVideo.play().catch(() => {});
+                    }
+                    setTimeout(playGreeting, 650);
+                });
+            });
+            onBeforeUnmount(() => {
+                humanActionToken++;
+                if (pendingHumanResolve) pendingHumanResolve(false);
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                [humanVideoA.value, humanVideoB.value, ...preloadedHumanVideos].forEach(video => {
+                    if (!video) return;
+                    video.pause();
+                    video.removeAttribute('src');
+                    video.load();
+                });
             });
 
             return {
@@ -1987,7 +2164,11 @@
                 showFloat,
                 activeTab,
                 isSpeaking,
-                digitalHumanVideo,
+                humanVideoA,
+                humanVideoB,
+                activeHumanSlot,
+                humanState,
+                humanStateLabel,
                 videoLoaded,
                 videoError,
                 narrationAudio,
@@ -2031,6 +2212,9 @@
                 isEdgeDimmed,
                 playNarration,
                 stopNarration,
+                playGreeting,
+                onHumanVideoReady,
+                onHumanVideoError,
                 onNarrationStart,
                 onNarrationPause,
                 onNarrationEnd,
