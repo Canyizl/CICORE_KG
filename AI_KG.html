@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>浙江交通集团 · 企业文化知识图谱 V5</title>
+    <title>浙江交通集团 · 企业文化知识图谱 V7</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -268,6 +268,13 @@
             padding: 8px 12px;
             border-radius: 25px;
             border-color: color-mix(in srgb, var(--c) 55%, #365767);
+            background: radial-gradient(
+                circle at 32% 25%,
+                color-mix(in srgb, var(--c) 72%, white),
+                color-mix(in srgb, var(--c) 42%, #10212b) 52%,
+                color-mix(in srgb, var(--c) 18%, #091820)
+            );
+            box-shadow: inset 0 0 14px color-mix(in srgb, var(--c) 22%, transparent);
         }
         .company b { font-size: 13px; white-space: nowrap; }
         .company small { font-size: 9px; color: #abc2cb; margin-top: 2px; }
@@ -320,6 +327,18 @@
             border-radius: 7px;
             outline: none;
         }
+        .search-button {
+            padding: 7px 13px;
+            color: #e8fbff;
+            background: linear-gradient(135deg, #177d9b, #155b86);
+            border: 1px solid #3c9fbc;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .search-button:hover { filter: brightness(1.16); box-shadow: 0 0 14px #38d7e744; }
         .filter {
             padding: 7px 9px;
             color: #a8bdc6;
@@ -642,14 +661,20 @@
             border: 1px solid color-mix(in srgb, var(--sel) 45%, #29434f);
             border-radius: 9px;
             background: color-mix(in srgb, var(--sel) 8%, #08161e);
+            width: 100%;
         }
-        .followup b { display:block;font-size:10px;margin-bottom:8px }
+        .followup > b { display:block;font-size:10px;margin-bottom:8px }
+        .followup-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px }
+        .followup-card { padding:9px;border:1px solid #365765;border-radius:8px;background:#0c1d26;text-align:left }
+        .followup-card strong { display:block;font-size:9px;color:#e1f3f7;margin-bottom:7px }
         .followup-actions { display:flex;gap:6px;flex-wrap:wrap }
         .followup-actions button { flex:1;min-width:90px;padding:7px;border:1px solid #365765;border-radius:7px;background:#10232c;color:#c5d8df;font-size:8px;cursor:pointer }
+        .followup-dismiss { margin-top:8px;width:100%;padding:6px;border:0;background:transparent;color:#718e9a;font-size:8px;cursor:pointer }
         .video-modal { position:fixed;z-index:150;inset:0;display:grid;place-items:center;background:#02070bdd;padding:24px }
         .video-dialog { width:min(900px,95vw);padding:12px;position:relative }
         .video-dialog video { display:block;width:100%;max-height:78vh;border-radius:9px;background:#000 }
         .video-dialog .modal-close { position:absolute;right:18px;top:18px;z-index:2;width:32px;height:32px;border:1px solid #ffffff55;border-radius:50%;background:#08151dcc;color:white;cursor:pointer }
+        .video-error-message { padding:18px;color:#ffb6c1;text-align:center;font-size:11px }
         .waves {
             display: flex;
             align-items: center;
@@ -705,6 +730,7 @@
             .human { min-height: 390px; }
         }
         @media (max-width: 720px) {
+            .followup-grid { grid-template-columns: 1fr; }
             .app { padding: 6px; }
             .header h1 { font-size: 16px; }
             .layout { display: block; }
@@ -755,9 +781,9 @@
                         <input 
                             class="search" 
                             v-model.trim="keyword" 
-                            @input="handleSearch" 
-                            placeholder="搜索板块或二级单位"
+                            placeholder="请输入完整单位名称"
                         >
+                        <button class="search-button" @click="handleSearch">搜索</button>
                         <button 
                             class="filter" 
                             :class="{active: filter === 'all'}" 
@@ -959,7 +985,7 @@
                     </div>
                     
                     <!-- 语音播报音频元素 -->
-                    <audio ref="narrationAudio" :src="selectedNode && selectedNode.audioPath ? resolveMediaPath(selectedNode.audioPath) : ''" preload="metadata" @play="onNarrationStart" @ended="onNarrationEnd" @pause="onNarrationPause" @error="onAudioError"></audio>
+                    <audio ref="narrationAudio" preload="metadata" @play="onNarrationStart" @ended="onNarrationEnd" @pause="onNarrationPause"></audio>
                     
                     <div class="human-actions">
                         <button class="voice" @click="playNarration">▶ 播放播报</button>
@@ -971,21 +997,32 @@
                 <section class="subtitle surface" :class="{playing: isSpeaking}">
                     <div class="subtitle-head">
                         <b>数字人台词字幕</b>
-                        <span>{{ isSpeaking ? '● 正在讲解' : '○ 等待播放' }}</span>
+                        <span>
+                            {{ isSpeaking ? '● 正在讲解' : '○ 等待播放' }}
+                            <template v-if="narrationSource"> · {{ narrationSource }}</template>
+                        </span>
                     </div>
                     <div class="subtitle-text">
                         {{ narrationText }}
                         <!-- 跟随对话 -->
                         <div v-if="showFollowup" class="followup">
-                            <b>{{ followupQuestion }}</b>
-                            <div v-if="selectedNode && selectedNode.graduateVideoPath" class="followup-actions">
-                                <button @click="openGraduateVideo">观看应届生视频</button>
-                                <button @click="showFollowup=false">暂不观看</button>
+                            <b>您还希望继续了解哪些内容？</b>
+                            <div class="followup-grid">
+                                <div class="followup-card">
+                                    <strong>是否继续了解企业文化？</strong>
+                                    <div class="followup-actions">
+                                        <button @click="continueIntroduction('culture')">介绍企业文化</button>
+                                        <button @click="continueIntroduction('overview')">企业简介</button>
+                                    </div>
+                                </div>
+                                <div v-if="selectedNode && selectedNode.graduateVideoPath" class="followup-card">
+                                    <strong>是否观看应届生视频？</strong>
+                                    <div class="followup-actions">
+                                        <button @click="openGraduateVideo">观看视频</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div v-else class="followup-actions">
-                                <button @click="continueIntroduction('culture')">介绍企业文化</button>
-                                <button @click="continueIntroduction('overview')">介绍企业简介</button>
-                            </div>
+                            <button class="followup-dismiss" @click="showFollowup=false">暂不需要，结束本次介绍</button>
                         </div>
                     </div>
                     <div class="waves">
@@ -999,7 +1036,17 @@
         <div v-if="showGraduateVideo" class="video-modal" @click.self="closeGraduateVideo">
             <div class="video-dialog surface">
                 <button class="modal-close" @click="closeGraduateVideo">×</button>
-                <video ref="graduateVideo" :src="selectedNode ? resolveMediaPath(selectedNode.graduateVideoPath) : ''" controls autoplay playsinline @ended="closeGraduateVideo"></video>
+                <video
+                    ref="graduateVideo"
+                    :src="graduateVideoSrc"
+                    controls
+                    autoplay
+                    playsinline
+                    @loadeddata="graduateVideoError = ''"
+                    @error="onGraduateVideoError"
+                    @ended="closeGraduateVideo"
+                ></video>
+                <div v-if="graduateVideoError" class="video-error-message">{{ graduateVideoError }}</div>
             </div>
         </div>
     </div>
@@ -1341,7 +1388,9 @@
             const videoLoaded = ref(false);
             const videoError = ref(false);
             const narrationAudio = ref(null);
+            const narrationSource = ref('');
             const graduateVideo = ref(null);
+            const graduateVideoError = ref('');
             const speechUtterance = ref(null);
             const showFollowup = ref(false);
             const showGraduateVideo = ref(false);
@@ -1351,7 +1400,7 @@
                 greeting: './aihuman/SayHi.webm',
                 standToSpeak: './aihuman/StandToSpeak.webm',
                 speaking: './aihuman/Speak.webm',
-                speakToStand: './aihuman/SpeakToStand.webm'
+                speakToStand: './aihuman/SpeakToStand2x.webm'
             };
             const humanStateNames = {
                 stand: '静止待机',
@@ -1462,6 +1511,9 @@
                 return selectedNode.value.graduateVideoPath
                     ? '是否需要观看应届生视频？'
                     : '是否继续介绍企业文化或企业简介？';
+            });
+            const graduateVideoSrc = computed(() => {
+                return selectedNode.value ? resolveMediaPath(selectedNode.value.graduateVideoPath) : '';
             });
             const humanStateLabel = computed(() => humanStateNames[humanState.value] || '待机');
 
@@ -1645,12 +1697,21 @@
 
             // ===== 语音播报 =====
             function resolveMediaPath(path) {
-                const value = String(path || '').trim();
+                const value = String(path || '').trim().replace(/^["']+|["']+$/g, '').trim();
                 if (!value) return '';
                 if (/^(https?:|blob:|data:)/i.test(value)) return value;
                 const normalized = value.replaceAll('\\', '/');
-                if (/^[a-z]:\//i.test(normalized)) return './' + normalized.split('/').pop();
-                return normalized;
+                if (/^[a-z]:\//i.test(normalized)) {
+                    const projectMarker = '/CICORE_KG-main/';
+                    const markerIndex = normalized.toLowerCase().lastIndexOf(projectMarker.toLowerCase());
+                    if (markerIndex >= 0) {
+                        return './' + normalized.slice(markerIndex + projectMarker.length);
+                    }
+                    return './' + normalized.split('/').pop();
+                }
+                return normalized.startsWith('./') || normalized.startsWith('../') || normalized.startsWith('/')
+                    ? normalized
+                    : './' + normalized;
             }
 
             function onNarrationStart() {
@@ -1688,25 +1749,69 @@
                     isSpeaking.value = false;
                 };
                 speechUtterance.value = utterance;
+                narrationSource.value = '浏览器语音合成';
                 window.speechSynthesis.speak(utterance);
+            }
+            function getNarrationAudioCandidates() {
+                const node = selectedNode.value;
+                if (!node) return [];
+                const indexMap = { overview: 1, business: 2, culture: 3 };
+                const index = indexMap[activeTab.value] || 1;
+                const candidates = [
+                    `./audio/${node.id}_${index}.mp3`,
+                    `./audio/${node.name}_${index}.mp3`
+                ];
+                if (node.audioPath) candidates.push(resolveMediaPath(node.audioPath));
+                return [...new Set(candidates.filter(Boolean))];
+            }
+            function loadAudioCandidate(audio, src, session) {
+                return new Promise(resolve => {
+                    let settled = false;
+                    const finish = value => {
+                        if (settled) return;
+                        settled = true;
+                        clearTimeout(timeout);
+                        audio.removeEventListener('canplay', ready);
+                        audio.removeEventListener('error', failed);
+                        resolve(value && session === narrationSession);
+                    };
+                    const ready = () => finish(true);
+                    const failed = () => finish(false);
+                    const timeout = setTimeout(() => finish(audio.readyState >= 2), 3200);
+                    audio.addEventListener('canplay', ready, { once: true });
+                    audio.addEventListener('error', failed, { once: true });
+                    audio.src = resolveMediaPath(src);
+                    audio.load();
+                });
+            }
+            async function tryPlayRecordedAudio(session) {
+                const audio = narrationAudio.value;
+                if (!audio) return false;
+                const candidates = getNarrationAudioCandidates();
+                for (const candidate of candidates) {
+                    if (session !== narrationSession) return false;
+                    const ready = await loadAudioCandidate(audio, candidate, session);
+                    if (!ready) continue;
+                    try {
+                        await audio.play();
+                        narrationSource.value = '录制音频';
+                        console.log('🔊 播放讲解音频：', candidate);
+                        return true;
+                    } catch (error) {
+                        console.warn('音频无法播放，继续尝试：', candidate, error);
+                    }
+                }
+                return false;
             }
             async function playNarration() {
                 stopNarration(false);
                 const session = ++narrationSession;
                 showFollowup.value = false;
-                const actionReady = await enterSpeakingState(session);
-                if (!actionReady || session !== narrationSession) return;
-                const audioPath = selectedNode.value?.audioPath;
-                if (audioPath && narrationAudio.value) {
-                    try {
-                        narrationAudio.value.src = resolveMediaPath(audioPath);
-                        narrationAudio.value.load();
-                        await narrationAudio.value.play();
-                        return;
-                    } catch (error) {
-                        console.warn('音频文件播放失败，改用浏览器语音合成：', error);
-                    }
-                }
+                // 数字人进入准备讲解动作时即同步启动音频，避免等待过渡视频结束。
+                enterSpeakingState(session).catch(error => console.warn('数字人讲解动作切换失败：', error));
+                const played = await tryPlayRecordedAudio(session);
+                if (played || session !== narrationSession) return;
+                console.info('未找到对应录制音频，使用浏览器语音合成。');
                 speakWithBrowser();
             }
             function stopNarration(animate = true) {
@@ -1717,15 +1822,10 @@
                     try { narrationAudio.value.currentTime = 0; } catch {}
                 }
                 speechUtterance.value = null;
+                narrationSource.value = '';
                 isSpeaking.value = false;
                 showFollowup.value = false;
                 if (animate) returnToStand();
-            }
-            function onAudioError() {
-                if (selectedNode.value?.audioPath && !isSpeaking.value) {
-                    console.warn('配置的音频路径不可用，自动使用浏览器语音合成。');
-                    speakWithBrowser();
-                }
             }
             function continueIntroduction(tabId) {
                 activeTab.value = tabId;
@@ -1734,12 +1834,27 @@
             }
             function openGraduateVideo() {
                 if (!selectedNode.value?.graduateVideoPath) return;
+                graduateVideoError.value = '';
                 showGraduateVideo.value = true;
                 showFollowup.value = false;
+                nextTick(() => {
+                    const video = graduateVideo.value;
+                    if (!video) return;
+                    video.load();
+                    video.play().catch(() => {
+                        // 浏览器可能阻止自动播放，用户仍可使用原生播放按钮。
+                    });
+                });
+            }
+            function onGraduateVideoError() {
+                const source = graduateVideoSrc.value || '未配置路径';
+                graduateVideoError.value = `视频加载失败：${source}。请确认文件位于网页目录中，或使用可访问的 HTTP(S) 地址。`;
+                console.error('应届生视频加载失败：', source);
             }
             function closeGraduateVideo() {
                 if (graduateVideo.value) graduateVideo.value.pause();
                 showGraduateVideo.value = false;
+                graduateVideoError.value = '';
             }
 
             // ===== 背景设置 =====
@@ -1915,6 +2030,7 @@
             // ===== 导入Excel =====
             async function handleFileUpload(event) {
                 const file = event.target.files[0];
+                const silent = Boolean(event.silent);
                 if (!file) return;
                 if (!/\.(xlsx|xls)$/i.test(file.name)) {
                     alert('请选择 .xlsx 或 .xls 文件。');
@@ -2041,15 +2157,44 @@
                         if (validation.warnings.length) {
                             console.warn('导入警告：', validation.warnings);
                         }
-                        alert(`导入成功：${finalNodes.length} 个节点，${uniqueEdges.length} 条连线${validation.warnings.length ? '，另有 ' + validation.warnings.length + ' 条警告（详见控制台）' : ''}。`);
+                        if (!silent) {
+                            alert(`导入成功：${finalNodes.length} 个节点，${uniqueEdges.length} 条连线${validation.warnings.length ? '，另有 ' + validation.warnings.length + ' 条警告（详见控制台）' : ''}。`);
+                        }
                     }, 300);
+                    event.target.value = '';
+                    return true;
 
                 } catch (err) {
                     console.error('❌ 导入失败:', err);
-                    alert('导入失败，请检查文件格式。错误: ' + err.message);
+                    if (!silent) alert('导入失败，请检查文件格式。错误: ' + err.message);
                     loading.value = false;
+                    event.target.value = '';
+                    return false;
                 }
-                event.target.value = '';
+            }
+
+            async function loadDefaultDatabase() {
+                if (window.location.protocol === 'file:') {
+                    console.info('当前为本地文件模式；请使用“导入 Excel”按钮加载 database.xlsx，或通过本地网页服务运行以自动加载。');
+                    initializeData();
+                    return;
+                }
+                try {
+                    const response = await fetch('./database.xlsx', { cache: 'no-store' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'database.xlsx', {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
+                    const loaded = await handleFileUpload({
+                        silent: true,
+                        target: { files: [file], value: '' }
+                    });
+                    if (!loaded) initializeData();
+                } catch (error) {
+                    console.warn('自动加载 database.xlsx 失败，已使用内置数据：', error);
+                    initializeData();
+                }
             }
 
             // ===== 辅助方法 =====
@@ -2091,20 +2236,20 @@
             }
 
             function handleSearch() {
-                if (!keyword.value) {
-                    filter.value = 'all';
+                const fullName = keyword.value.trim();
+                if (!fullName) {
+                    alert('请输入完整单位名称后再点击搜索。');
                     return;
                 }
-                const found = state.nodes.find(n => n.name.includes(keyword.value));
+                const found = state.nodes.find(n => String(n.name || '').trim() === fullName);
                 if (found) {
                     handleSelectNode(found);
+                    return;
                 }
+                alert(`未找到名称完全匹配的单位：“${fullName}”。请检查名称后重试。`);
             }
 
             function isNodeDimmed(node) {
-                if (keyword.value) {
-                    return !node.name.includes(keyword.value);
-                }
                 if (filter.value === 'all') return false;
                 if (node.id === 'root') return false;
                 if (node.type === 'sector') return node.id !== filter.value;
@@ -2133,7 +2278,7 @@
             }
 
             onMounted(() => {
-                initializeData();
+                loadDefaultDatabase();
                 preloadHumanActions();
                 nextTick(() => {
                     const standVideo = humanVideoA.value;
@@ -2172,7 +2317,10 @@
                 videoLoaded,
                 videoError,
                 narrationAudio,
+                narrationSource,
                 graduateVideo,
+                graduateVideoSrc,
+                graduateVideoError,
                 showFollowup,
                 showGraduateVideo,
                 showBackgroundPanel,
@@ -2218,9 +2366,9 @@
                 onNarrationStart,
                 onNarrationPause,
                 onNarrationEnd,
-                onAudioError,
                 continueIntroduction,
                 openGraduateVideo,
+                onGraduateVideoError,
                 closeGraduateVideo,
                 resolveMediaPath,
                 chooseBackgroundPreset,
