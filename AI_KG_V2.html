@@ -1,0 +1,3903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>百路同源 · 一心交投</title>
+
+    <!-- Vue3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
+    </script>
+    <!-- XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+    </script>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        /* ===== 全局暗色主题 ===== */
+        :root {
+            --bg: #061018;
+            --panel: #0b1922;
+            --line: #2a5a6a;
+            --text: #eef9fc;
+            --muted: #8bb4c0;
+            --font-scale: 1.0;
+            --base-font: 15px;
+            --primary-glow: #4ad4e0;
+            --card-bg: rgba(16, 33, 43, 0.88);
+            --sidebar-width: 340px;
+            --right-width: 380px;
+            --header-height: 64px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+        html,
+        body,
+        #app {
+            margin: 0;
+            width: 100%;
+            min-height: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+            font-size: var(--base-font);
+            color: var(--text);
+            background: radial-gradient(circle at 40% 45%, #1a4a5e, #0b2633 52%, var(--bg));
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3d7a8a;
+            border-radius: 99px;
+        }
+
+        .surface {
+            background: var(--card-bg);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(74, 212, 224, 0.10);
+            backdrop-filter: blur(6px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .surface:hover {
+            border-color: #3d8a9a;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(74, 212, 224, 0.20);
+        }
+
+        /* ===== 应用容器 ===== */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #app:before {
+            content: "";
+            position: fixed;
+            z-index: -2;
+            inset: -20px;
+            background-image: linear-gradient(rgb(6 16 24 / var(--bg-dim, .62)), rgb(6 16 24 / var(--bg-dim, .62))), var(--user-bg, none), var(--preset-bg);
+            background-position: center;
+            background-size: cover;
+            filter: blur(var(--bg-blur, 0px));
+            transition: background-image .3s, filter .3s;
+        }
+
+        /* ===== 头部 ===== */
+        .app-header {
+            flex: 0 0 var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(74, 212, 224, 0.15);
+            background: rgba(6, 16, 24, 0.70);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            flex-shrink: 0;
+        }
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            margin: 0;
+            background: linear-gradient(135deg, #a2f0f6, #4ad4e0 45%, #1a9fc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(74, 212, 224, 0.25);
+        }
+        .app-header h1 small {
+            font-size: 14px;
+            font-weight: 400;
+            -webkit-text-fill-color: #8bb4c0;
+            background: none;
+            margin-left: 10px;
+            letter-spacing: 1px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .header-actions .btn-bg {
+            border: 1px solid #3d7a8a;
+            border-radius: 8px;
+            background: rgba(13, 32, 42, 0.7);
+            color: #c4e4ed;
+            font-size: 12px;
+            padding: 4px 14px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .header-actions .btn-bg:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+        }
+        .header-actions .badge-ds {
+            font-size: 11px;
+            color: var(--muted);
+            background: rgba(42, 90, 106, 0.25);
+            padding: 4px 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(42, 90, 106, 0.2);
+        }
+
+        /* ===== 主布局 ===== */
+        .app-main {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            padding: 10px 12px 12px 12px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* ===== 左侧面板 ===== */
+        .sidebar-left {
+            flex: 0 0 var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 16px;
+            background: rgba(9, 22, 31, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--line);
+            transition: border-color 0.3s;
+        }
+        .sidebar-left:hover {
+            border-color: #3d8a9a;
+        }
+
+        /* ===== 中间图谱 ===== */
+        .graph-wrap {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 48%, rgba(20, 59, 77, 0.7), rgba(10, 25, 34, 0.9) 40%, rgba(7, 18, 25, 0.95) 76%);
+            border: 1px solid rgba(42, 90, 106, 0.4);
+        }
+        .graph-wrap .graph-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            z-index: 0;
+            border-radius: 16px;
+        }
+        .graph-wrap .graph-bg.active {
+            opacity: 0.28;
+        }
+        .graph-wrap:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(85, 118, 133, 0.15) 1px, transparent 1px);
+            background-size: 24px 24px;
+            mask-image: radial-gradient(circle, #000 18%, transparent 80%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .graph-overlay {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== 右侧面板 ===== */
+        .sidebar-right {
+            flex: 0 0 var(--right-width);
+            min-width: var(--right-width);
+            max-width: var(--right-width);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        .sidebar-right .human-wrap {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--sel) 18%, transparent), transparent 43%),
+                linear-gradient(180deg, #10232d, #08151d);
+            border: 1px solid var(--line);
+        }
+        .sidebar-right .subtitle-wrap {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: var(--card-bg);
+            padding: 12px 14px 10px;
+        }
+
+        /* ===== 图谱舞台 ===== */
+        .stage-wrapper {
+            position: absolute;
+            inset: 48px 0 0;
+            overflow: hidden;
+            cursor: grab;
+            z-index: 2;
+            border-radius: 12px;
+        }
+        .stage-wrapper:active {
+            cursor: grabbing;
+        }
+        .stage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform;
+        }
+        .edges {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* ---- 连线 ---- */
+        .edge {
+            fill: none;
+            vector-effect: non-scaling-stroke;
+            transition: stroke .4s, stroke-width .4s, opacity .4s, filter .4s;
+        }
+        .edge.main {
+            stroke: #4ad4e0;
+            stroke-width: 3.2;
+            filter: drop-shadow(0 0 10px rgba(74, 212, 224, 0.5)) drop-shadow(0 0 28px rgba(74, 212, 224, 0.2));
+            stroke-dasharray: 8 4;
+            animation: dash-flow 2.8s linear infinite;
+        }
+        .edge.main.on {
+            stroke: var(--c, #4ad4e0);
+            stroke-width: 4.5;
+            filter: drop-shadow(0 0 18px var(--c, #4ad4e0)) drop-shadow(0 0 44px color-mix(in srgb, var(--c, #4ad4e0) 45%, transparent));
+        }
+        .edge.main.off {
+            opacity: 0.10;
+            filter: none;
+            animation: none;
+        }
+        .edge.curve {
+            stroke: var(--c, #3d7a8a);
+            stroke-width: 1.8;
+            opacity: 0.7;
+            filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #3d7a8a) 20%, transparent));
+        }
+        .edge.curve.on {
+            stroke: var(--c, #4ad4e0);
+            stroke-width: 3;
+            opacity: 1;
+            filter: drop-shadow(0 0 14px color-mix(in srgb, var(--c, #4ad4e0) 40%, transparent)) drop-shadow(0 0 30px color-mix(in srgb, var(--c, #4ad4e0) 20%, transparent));
+        }
+        .edge.curve.off {
+            opacity: 0.04;
+            filter: none;
+        }
+        .edge.curve.active-glow {
+            stroke: var(--c);
+            stroke-width: 2.6;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 50%, transparent));
+        }
+
+        @keyframes dash-flow {
+            to {
+                stroke-dashoffset: -24;
+            }
+        }
+
+        .particle {
+            fill: var(--c, #4ad4e0);
+            filter: drop-shadow(0 0 6px var(--c, #4ad4e0));
+        }
+
+        /* ---- 节点 ---- */
+        .node {
+            position: absolute;
+            left: calc(var(--x) * 1px);
+            top: calc(var(--y) * 1px);
+            transform: translate(-50%, -50%) scale(1);
+            z-index: 4;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            cursor: pointer;
+            color: #fff;
+            border: 1.5px solid #3d7a8a;
+            background: rgba(17, 37, 48, 0.9);
+            transition: transform .35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-color .3s,
+                box-shadow .3s,
+                opacity .4s,
+                filter .4s;
+            will-change: transform;
+            font-size: 14px;
+            user-select: none;
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+        }
+        .node:hover,
+        .node.selected {
+            transform: translate(-50%, -50%) scale(1.12);
+            border-color: var(--c);
+            box-shadow: 0 0 40px color-mix(in srgb, var(--c) 55%, transparent), inset 0 0 20px color-mix(in srgb, var(--c) 15%, transparent);
+            z-index: 5;
+        }
+        .node.dim {
+            opacity: .08;
+            filter: grayscale(0.9);
+            pointer-events: none;
+        }
+        .node.hidden-company {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.6);
+        }
+        .node.hidden-company.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .root {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            padding: 18px;
+            background: radial-gradient(circle at 35% 27%, #6ae4ef, #1a8fba 48%, #0b4068);
+            border: 2.5px solid #8af2f6;
+            box-shadow: 0 0 0 14px rgba(74, 212, 224, 0.08), 0 0 50px rgba(74, 212, 224, 0.35);
+            animation: pulse-root 3.2s ease-in-out infinite;
+        }
+        .root:before {
+            content: "";
+            position: absolute;
+            inset: -18px;
+            border: 1.5px dashed rgba(74, 212, 224, 0.35);
+            border-radius: 50%;
+            animation: spin 24s linear infinite;
+        }
+        .root b {
+            font-size: 22px;
+            line-height: 1.3;
+        }
+        .root small {
+            font-size: 12px;
+            letter-spacing: 2px;
+            opacity: .9;
+        }
+
+        @keyframes pulse-root {
+            0%,
+            100% {
+                box-shadow: 0 0 0 14px rgba(74, 212, 224, 0.08), 0 0 50px rgba(74, 212, 224, 0.35);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 26px rgba(74, 212, 224, 0.14), 0 0 80px rgba(74, 212, 224, 0.55);
+                transform: translate(-50%, -50%) scale(1.03);
+            }
+        }
+
+        .sector {
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            padding: 12px;
+            background: radial-gradient(circle at 35% 28%,
+                    color-mix(in srgb, var(--c) 85%, white),
+                    color-mix(in srgb, var(--c) 38%, #10212b) 52%,
+                    #0f2029);
+            border-color: color-mix(in srgb, var(--c) 75%, white);
+            animation: pulse-sector 3.6s ease-in-out infinite;
+            animation-delay: calc(var(--idx, 0) * 0.25s);
+        }
+        .sector b {
+            font-size: 16px;
+        }
+        .sector small {
+            font-size: 10px;
+            margin-top: 2px;
+            opacity: .85;
+        }
+
+        @keyframes pulse-sector {
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 15%, transparent), 0 0 20px color-mix(in srgb, var(--c) 20%, transparent);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 16px color-mix(in srgb, var(--c) 20%, transparent), 0 0 45px color-mix(in srgb, var(--c) 35%, transparent);
+                transform: translate(-50%, -50%) scale(1.04);
+            }
+        }
+
+        .company {
+            min-width: 110px;
+            min-height: 50px;
+            padding: 8px 14px;
+            border-radius: 30px;
+            border-color: color-mix(in srgb, var(--c) 55%, #3d7a8a);
+            background: radial-gradient(circle at 32% 25%,
+                    color-mix(in srgb, var(--c) 72%, white),
+                    color-mix(in srgb, var(--c) 42%, #10212b) 52%,
+                    color-mix(in srgb, var(--c) 18%, #091820));
+            box-shadow: inset 0 0 18px color-mix(in srgb, var(--c) 22%, transparent), 0 0 12px color-mix(in srgb, var(--c) 10%, transparent);
+        }
+        .company b {
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .company small {
+            font-size: 10px;
+            color: #b0d0da;
+            margin-top: 1px;
+        }
+        .company:after {
+            content: "";
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--c);
+            box-shadow: 0 0 10px var(--c);
+        }
+        .company:hover,
+        .company.selected {
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 工具栏 ===== */
+        .graph-tools {
+            position: absolute;
+            z-index: 30;
+            left: 12px;
+            right: 12px;
+            top: 10px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            pointer-events: none;
+        }
+        .graph-tools>* {
+            pointer-events: auto;
+        }
+        .graph-tools .search-input {
+            width: 180px;
+            padding: 6px 12px;
+            color: #fff;
+            background: rgba(9, 24, 32, 0.85);
+            border: 1px solid #3d7a8a;
+            border-radius: 8px;
+            outline: none;
+            font-size: 12px;
+            backdrop-filter: blur(4px);
+        }
+        .graph-tools .search-input:focus {
+            border-color: #4ad4e0;
+            box-shadow: 0 0 14px rgba(74, 212, 224, 0.15);
+        }
+        .graph-tools .btn-tool {
+            padding: 5px 12px;
+            color: #e8fbff;
+            background: linear-gradient(135deg, #177d9b, #155b86);
+            border: 1px solid #4ad4e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: .2s;
+        }
+        .graph-tools .btn-tool:hover {
+            filter: brightness(1.15);
+            box-shadow: 0 0 20px rgba(74, 212, 224, 0.2);
+        }
+        .graph-tools .filter-btn {
+            padding: 5px 10px;
+            color: #b0d0da;
+            background: rgba(16, 33, 43, 0.8);
+            border: 1px solid #3d7a8a;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            white-space: nowrap;
+            transition: .25s;
+            backdrop-filter: blur(4px);
+        }
+        .graph-tools .filter-btn.active {
+            color: #fff;
+            border-color: var(--c);
+            background: color-mix(in srgb, var(--c) 22%, #10212b);
+            box-shadow: 0 0 14px color-mix(in srgb, var(--c) 18%, transparent);
+        }
+        .graph-tools .filter-btn:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+        }
+        .graph-tools .file-btn {
+            padding: 5px 12px;
+            color: #50dfad;
+            background: rgba(13, 40, 32, 0.8);
+            border: 1px solid #2a5c4a;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: .2s;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+        }
+        .graph-tools .file-btn:hover {
+            background: #11382b;
+            border-color: #50dfad;
+            box-shadow: 0 0 14px rgba(80, 223, 173, 0.12);
+        }
+        .graph-tools .file-btn input {
+            display: none;
+        }
+        .graph-tools .ds-label {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: .7;
+        }
+
+        /* ===== 缩放 ===== */
+        .zoom-controls {
+            position: absolute;
+            z-index: 35;
+            right: 14px;
+            bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #3d7a8a;
+            background: rgba(13, 28, 36, 0.85);
+            color: #dcecf1;
+            cursor: pointer;
+            font-size: 16px;
+            display: grid;
+            place-items: center;
+            transition: .2s;
+            backdrop-filter: blur(6px);
+            user-select: none;
+        }
+        .zoom-btn:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+            box-shadow: 0 0 14px rgba(74, 212, 224, 0.15);
+        }
+        .zoom-btn:active {
+            transform: scale(0.92);
+        }
+        .zoom-level {
+            font-size: 10px;
+            color: var(--muted);
+            text-align: center;
+            padding: 2px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== 左侧面板内部 ===== */
+        .sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 12px 14px 14px 14px;
+            overflow: hidden;
+        }
+
+        /* 通用标题 */
+        .sidebar-title {
+            flex: 0 0 auto;
+            border-bottom: 1px solid rgba(74, 212, 224, 0.15);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .sidebar-title .title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-title .icon-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ad4e0, #1a8fba);
+            display: grid;
+            place-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            color: #061116;
+            flex-shrink: 0;
+            box-shadow: 0 0 24px rgba(74, 212, 224, 0.25);
+        }
+        .sidebar-title h2 {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 800;
+            color: #eef9fc;
+            letter-spacing: 1px;
+        }
+        .sidebar-title .sub {
+            font-size: 10px;
+            color: #8bb4c0;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+        .sidebar-title .tags-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .sidebar-title .tags-row span {
+            font-size: 8px;
+            padding: 2px 8px;
+            border: 1px solid rgba(74, 212, 224, 0.2);
+            border-radius: 99px;
+            color: #4ad4e0;
+            background: rgba(74, 212, 224, 0.06);
+        }
+        .sidebar-title .tags-row .tag-gray {
+            border-color: rgba(74, 212, 224, 0.15);
+            color: #8bb4c0;
+        }
+        .btn-close-node {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8bb4c0;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: .2s;
+            flex-shrink: 0;
+        }
+        .btn-close-node:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 2px;
+        }
+
+        /* 节点详情标签页 */
+        .detail-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(42, 90, 106, 0.2);
+            padding-bottom: 6px;
+        }
+        .detail-tabs .tab-item {
+            padding: 6px 14px;
+            border-radius: 8px 8px 0 0;
+            border: 0;
+            background: transparent;
+            color: #8bb4c0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+            border-bottom: 2.5px solid transparent;
+        }
+        .detail-tabs .tab-item.active {
+            color: #fff;
+            border-color: var(--sel, #4ad4e0);
+            background: color-mix(in srgb, var(--sel, #4ad4e0) 8%, transparent);
+        }
+        .detail-tabs .tab-item:hover {
+            color: #d7e7ed;
+        }
+
+        .detail-content {
+            font-size: 13px;
+            line-height: 1.9;
+            color: #b0d0da;
+            padding: 4px 0 8px 0;
+        }
+        .detail-content .kicker {
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .detail-content h3 {
+            font-size: 16px;
+            margin: 0 0 8px 0;
+            color: #eef9fc;
+        }
+        .detail-content p {
+            margin: 0 0 10px 0;
+        }
+        .detail-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .detail-tags span {
+            font-size: 10px;
+            padding: 3px 10px;
+            border: 1px solid #3d7a8a;
+            border-radius: 99px;
+            color: #b0d0da;
+        }
+        .meta-info {
+            margin-top: 10px;
+            font-size: 10px;
+            color: var(--muted);
+            border-top: 1px solid rgba(42, 90, 106, 0.4);
+            padding-top: 8px;
+        }
+
+        /* ===== 总部仪表板 ===== */
+        .goal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .goal-card {
+            background: rgba(16, 33, 43, 0.5);
+            border: 1px solid rgba(42, 90, 106, 0.2);
+            border-radius: 8px;
+            padding: 10px 4px;
+            text-align: center;
+        }
+        .goal-card .num {
+            font-size: 26px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4ad4e0, #a2f0f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .goal-card .num .unit {
+            font-size: 13px;
+            font-weight: 400;
+            -webkit-text-fill-color: #8bb4c0;
+        }
+        .goal-card .label {
+            font-size: 11px;
+            color: #8bb4c0;
+            line-height: 1.2;
+        }
+        .goal-card.goal-green .num {
+            background: linear-gradient(135deg, #44d6a1, #7ae9c0);
+            -webkit-background-clip: text;
+        }
+        .goal-card.goal-orange .num {
+            background: linear-gradient(135deg, #ffad5c, #ffd93d);
+            -webkit-background-clip: text;
+        }
+        .goal-card.goal-purple .num {
+            background: linear-gradient(135deg, #a97cff, #d4a0ff);
+            -webkit-background-clip: text;
+        }
+        .goal-card.goal-red .num {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            -webkit-background-clip: text;
+        }
+        .goal-card.goal-highlight {
+            border-color: rgba(74, 212, 224, 0.15);
+        }
+
+        /* 图表容器 */
+        .chart-box {
+            background: rgba(8, 22, 30, 0.5);
+            border: 1px solid rgba(42, 90, 106, 0.15);
+            border-radius: 8px;
+            padding: 10px 10px 6px 10px;
+            margin-bottom: 8px;
+        }
+        .chart-box .chart-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .chart-box .chart-head .title {
+            font-size: 12px;
+            color: #8bb4c0;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .chart-box .chart-head .period {
+            font-size: 10px;
+            color: #506a75;
+        }
+        .chart-box .chart-foot {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #506a75;
+            padding: 0 4px;
+        }
+        .chart-box .chart-foot .highlight {
+            color: #4ad4e0;
+        }
+
+        .chart-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .chart-row-2 .chart-box {
+            padding: 8px 8px 4px 8px;
+            margin-bottom: 0;
+        }
+        .chart-row-2 .chart-box .chart-head .title {
+            font-size: 10px;
+        }
+
+        .milestone-box {
+            background: rgba(8, 22, 30, 0.3);
+            border: 1px solid rgba(42, 90, 106, 0.10);
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .milestone-box .milestone-head {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #506a75;
+            letter-spacing: 0.5px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(42, 90, 106, 0.08);
+        }
+        .milestone-box .milestone-head .label {
+            color: #4ad4e0;
+        }
+        .milestone-box .milestone-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            padding-top: 4px;
+        }
+        .milestone-box .milestone-grid div .year {
+            font-size: 9px;
+            color: #4ad4e0;
+        }
+        .milestone-box .milestone-grid div .desc {
+            font-size: 8px;
+            color: #8bb4c0;
+        }
+
+        /* ===== 数字人 ===== */
+        .human-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 10px 14px 10px 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        .human-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .human-top b {
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 0 16px rgba(74, 212, 224, 0.25);
+        }
+        .human-top .status-badge {
+            font-size: 11px;
+            color: #50dfad;
+            border: 1px solid rgba(80, 223, 173, 0.25);
+            border-radius: 99px;
+            padding: 2px 12px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+        }
+        .human-slot {
+            flex: 1;
+            position: relative;
+            margin: 6px 0 4px 0;
+            border: 1.5px dashed rgba(61, 122, 138, 0.4);
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(ellipse at 50% 100%,
+                    color-mix(in srgb, var(--sel) 16%, transparent),
+                    transparent 56%);
+            min-height: 100px;
+            overflow: hidden;
+        }
+        .human-video {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: transparent;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity .2s ease;
+            pointer-events: none;
+        }
+        .human-video.active {
+            opacity: 1;
+        }
+        .human-video.hidden {
+            display: none;
+        }
+        .video-badge {
+            position: absolute;
+            z-index: 5;
+            left: 8px;
+            bottom: 6px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            border: 1px solid rgba(80, 223, 173, 0.2);
+            background: rgba(7, 21, 29, 0.7);
+            color: #8fe7ca;
+            font-size: 9px;
+            backdrop-filter: blur(4px);
+        }
+        .action-state {
+            position: absolute;
+            z-index: 6;
+            right: 8px;
+            bottom: 6px;
+            padding: 2px 10px;
+            border-radius: 99px;
+            border: 1px solid color-mix(in srgb, var(--sel) 45%, transparent);
+            background: rgba(7, 21, 29, 0.7);
+            color: #c4e9ef;
+            font-size: 9px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .ring {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border: 1.5px solid color-mix(in srgb, var(--sel) 40%, transparent);
+            border-radius: 50%;
+            animation: spin 16s linear infinite;
+        }
+        .ring:after {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            border: 1.5px dashed color-mix(in srgb, var(--sel) 30%, transparent);
+            border-radius: 50%;
+        }
+        .person {
+            position: relative;
+            width: 110px;
+            height: 200px;
+            filter: drop-shadow(0 0 18px color-mix(in srgb, var(--sel) 30%, transparent));
+        }
+        .person .head {
+            position: absolute;
+            left: 34px;
+            top: 4px;
+            width: 42px;
+            height: 52px;
+            border-radius: 45%;
+            background: linear-gradient(145deg, #587582, #1f3540);
+            border: 1.5px solid #87a5b1;
+        }
+        .person .neck {
+            position: absolute;
+            left: 48px;
+            top: 52px;
+            width: 18px;
+            height: 20px;
+            background: #344f5b;
+        }
+        .person .body {
+            position: absolute;
+            left: 6px;
+            top: 66px;
+            width: 100px;
+            height: 128px;
+            border-radius: 40px 40px 16px 16px;
+            background: linear-gradient(145deg, #31586a, #122b38);
+            border: 1.5px solid #4f7b8e;
+            clip-path: polygon(26% 0, 74% 0, 100% 25%, 87% 100%, 13% 100%, 0 25%);
+        }
+        .person .core {
+            position: absolute;
+            left: 50px;
+            top: 106px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--sel);
+            box-shadow: 0 0 16px var(--sel);
+        }
+        .human-wrap.talking .core {
+            animation: talk 1s infinite;
+        }
+        @keyframes talk {
+            50% {
+                transform: scale(1.6);
+                box-shadow: 0 0 28px var(--sel);
+            }
+        }
+        .slot-text {
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #7895a2;
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        .human-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .human-actions .voice-btn {
+            padding: 4px 14px;
+            color: #dcecf1;
+            background: rgba(16, 35, 44, 0.8);
+            border: 1px solid color-mix(in srgb, var(--sel) 50%, #3d7a8a);
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: .2s;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .human-actions .voice-btn:hover {
+            background: #1a3644;
+            border-color: color-mix(in srgb, var(--sel) 70%, #3d7a8a);
+            box-shadow: 0 0 14px color-mix(in srgb, var(--sel) 12%, transparent);
+        }
+        .human-actions .voice-btn.stop {
+            border-color: #784552;
+            color: #ff9eae;
+            background: rgba(42, 21, 28, 0.8);
+        }
+        .human-actions .voice-btn.stop:hover {
+            background: #3d1f28;
+        }
+        .human-actions small {
+            font-size: 9px;
+            color: var(--muted);
+            margin-left: auto;
+        }
+
+        /* ===== 字幕 ===== */
+        .subtitle-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .subtitle-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .subtitle-head b {
+            font-size: 14px;
+        }
+        .subtitle-head span {
+            font-size: 11px;
+            color: #50dfad;
+        }
+        .subtitle-text {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 16px;
+            border: 1.5px solid rgba(61, 122, 138, 0.4);
+            border-radius: 12px;
+            background: rgba(8, 22, 30, 0.6);
+            color: #d7e7ed;
+            font-size: 16px;
+            line-height: 2.0;
+            overflow-y: auto;
+            min-height: 60px;
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 0 30px rgba(74, 212, 224, 0.02);
+            margin: 6px 0 4px 0;
+        }
+        .subtitle-text .text-content {
+            width: 100%;
+            text-align: center;
+            min-height: 2.4em;
+        }
+        .subtitle-text .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: #4ad4e0;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: blink 0.8s step-end infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .followup {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border: 1.5px solid color-mix(in srgb, var(--sel) 40%, #3d7a8a);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--sel) 6%, rgba(8, 22, 30, 0.9));
+            width: 100%;
+            flex-shrink: 0;
+        }
+        .followup>b {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #d7e7ed;
+        }
+        .followup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .followup-card {
+            padding: 8px 10px;
+            border: 1px solid rgba(61, 122, 138, 0.4);
+            border-radius: 10px;
+            background: rgba(12, 29, 38, 0.5);
+            text-align: left;
+        }
+        .followup-card strong {
+            display: block;
+            font-size: 10px;
+            color: #e1f3f7;
+            margin-bottom: 4px;
+        }
+        .followup-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .followup-actions button {
+            flex: 1;
+            min-width: 60px;
+            padding: 4px 8px;
+            border: 1px solid rgba(61, 122, 138, 0.4);
+            border-radius: 8px;
+            background: rgba(16, 35, 44, 0.5);
+            color: #c5d8df;
+            font-size: 9px;
+            cursor: pointer;
+            transition: .2s;
+            font-weight: 600;
+        }
+        .followup-actions button:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+            box-shadow: 0 0 10px rgba(74, 212, 224, 0.08);
+        }
+        .followup-dismiss {
+            margin-top: 6px;
+            width: 100%;
+            padding: 4px;
+            border: 0;
+            background: transparent;
+            color: #718e9a;
+            font-size: 10px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .followup-dismiss:hover {
+            color: #b0d0da;
+        }
+
+        .waves {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .waves i {
+            display: block;
+            width: 3px;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--sel);
+            opacity: .3;
+            transition: .2s;
+        }
+        .subtitle-wrap.playing .waves i {
+            animation: wave 0.9s ease-in-out infinite alternate;
+        }
+        .waves i:nth-child(2n) {
+            animation-delay: .2s !important;
+        }
+        .waves i:nth-child(3n) {
+            animation-delay: .4s !important;
+        }
+        @keyframes wave {
+            to {
+                height: 20px;
+                opacity: 1;
+            }
+        }
+
+        /* ===== 视频弹窗 ===== */
+        .video-modal {
+            position: fixed;
+            z-index: 150;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(2, 7, 11, 0.92);
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+        .video-dialog {
+            width: min(880px, 94vw);
+            padding: 12px;
+            position: relative;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: var(--card-bg);
+            box-shadow: 0 20px 60px #000a;
+        }
+        .video-dialog video {
+            display: block;
+            width: 100%;
+            max-height: 76vh;
+            border-radius: 10px;
+            background: #000;
+        }
+        .video-dialog .modal-close {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            z-index: 2;
+            width: 34px;
+            height: 34px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            background: rgba(8, 21, 29, 0.8);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            display: grid;
+            place-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .video-dialog .modal-close:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+        }
+        .video-error-message {
+            padding: 14px;
+            color: #ffb6c1;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        /* ===== Loading ===== */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(7, 18, 25, 0.96);
+            z-index: 100;
+            border-radius: 16px;
+        }
+        .loading-spinner {
+            width: 42px;
+            height: 42px;
+            border: 3.5px solid #3d7a8a;
+            border-top-color: #4ad4e0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-overlay p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 14px;
+        }
+
+        /* ===== 背景面板 ===== */
+        .bg-panel {
+            position: fixed;
+            z-index: 120;
+            right: 18px;
+            top: 74px;
+            width: 320px;
+            padding: 16px;
+            border: 1px solid #3d7a8a;
+            border-radius: 14px;
+            background: rgba(9, 24, 33, 0.97);
+            box-shadow: 0 20px 50px #000c;
+            backdrop-filter: blur(14px);
+            font-size: 12px;
+        }
+        .bg-panel .bg-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .bg-panel .bg-head b {
+            font-size: 13px;
+            color: #c4e4ed;
+        }
+        .bg-panel .bg-head button {
+            border: 0;
+            background: transparent;
+            color: #8bb4c0;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .bg-preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        .bg-preset {
+            height: 48px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--preview);
+            background-size: cover;
+            transition: .2s;
+        }
+        .bg-preset.active {
+            border-color: #4ad4e0;
+            box-shadow: 0 0 16px rgba(74, 212, 224, 0.3);
+        }
+        .bg-upload {
+            display: block;
+            margin-top: 10px;
+            padding: 8px;
+            text-align: center;
+            border: 1px dashed #3d7a8a;
+            border-radius: 8px;
+            color: #8bb4c0;
+            font-size: 10px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .bg-upload:hover {
+            border-color: #4ad4e0;
+            color: #c4e4ed;
+        }
+        .bg-upload input {
+            display: none;
+        }
+        .bg-slider {
+            display: grid;
+            grid-template-columns: 52px 1fr 36px;
+            gap: 8px;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 9px;
+            color: #8bb4c0;
+        }
+        .bg-slider input {
+            width: 100%;
+            accent-color: #4ad4e0;
+        }
+        .bg-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .bg-actions button {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #3d7a8a;
+            border-radius: 8px;
+            background: #10232c;
+            color: #c4e4ed;
+            font-size: 10px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .bg-actions button:hover {
+            background: #1a3644;
+            border-color: #4ad4e0;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 1400px) {
+            :root {
+                --sidebar-width: 290px;
+                --right-width: 330px;
+            }
+        }
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 260px;
+                --right-width: 280px;
+            }
+            .root {
+                width: 120px;
+                height: 120px;
+            }
+            .root b {
+                font-size: 18px;
+            }
+            .sector {
+                width: 86px;
+                height: 86px;
+            }
+            .sector b {
+                font-size: 13px;
+            }
+            .company {
+                min-width: 90px;
+                min-height: 40px;
+                padding: 4px 10px;
+            }
+            .company b {
+                font-size: 11px;
+            }
+            .company small {
+                font-size: 9px;
+            }
+            .app-header h1 {
+                font-size: 20px;
+            }
+            .app-header h1 small {
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 992px) {
+            .app-main {
+                flex-direction: column;
+                overflow-y: auto;
+                gap: 8px;
+            }
+            :root {
+                --sidebar-width: 100%;
+                --right-width: 100%;
+            }
+            .sidebar-left {
+                flex: 0 0 auto;
+                max-height: 280px;
+                min-height: 200px;
+            }
+            .sidebar-right {
+                flex: 0 0 auto;
+                flex-direction: row;
+                min-height: 200px;
+                max-height: 340px;
+                gap: 8px;
+            }
+            .sidebar-right .human-wrap {
+                flex: 1;
+            }
+            .sidebar-right .subtitle-wrap {
+                flex: 1;
+            }
+            .graph-wrap {
+                flex: 1;
+                min-height: 380px;
+            }
+            .graph-tools .search-input {
+                width: 120px;
+                font-size: 10px;
+            }
+            .graph-tools .filter-btn {
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+            .graph-tools .btn-tool {
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+            .graph-tools .file-btn {
+                font-size: 9px;
+                padding: 3px 8px;
+            }
+            .goal-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .goal-card .num {
+                font-size: 20px;
+            }
+        }
+        @media (max-width: 600px) {
+            .app-header h1 {
+                font-size: 16px;
+            }
+            .app-header h1 small {
+                display: none;
+            }
+            .header-actions .badge-ds {
+                display: none;
+            }
+            .app-header {
+                padding: 0 10px;
+                height: 52px;
+            }
+            .goal-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sidebar-left {
+                max-height: 200px;
+                min-height: 140px;
+            }
+            .sidebar-right {
+                flex-direction: column;
+                max-height: 400px;
+                min-height: 300px;
+            }
+            .sidebar-right .human-wrap {
+                flex: 1;
+                min-height: 120px;
+            }
+            .sidebar-right .subtitle-wrap {
+                flex: 1;
+                min-height: 120px;
+            }
+            .subtitle-text {
+                font-size: 14px;
+                padding: 10px;
+            }
+            .human-slot .person {
+                transform: scale(0.6);
+            }
+            .graph-wrap {
+                min-height: 280px;
+            }
+            .zoom-controls {
+                right: 8px;
+                bottom: 30px;
+            }
+            .zoom-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 13px;
+            }
+            .followup-grid {
+                grid-template-columns: 1fr;
+            }
+            .bg-panel {
+                right: 10px;
+                left: 10px;
+                width: auto;
+                top: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" :style="backgroundStyle">
+
+        <!-- ===== 头部 ===== -->
+        <header class="app-header">
+            <h1>百路同源 · 一心交投 <small>做有担当的开路人</small></h1>
+            <div class="header-actions">
+                <span class="badge-ds" v-if="dataSource">📁 {{ dataSource }}</span>
+                <button class="btn-bg" @click="showBackgroundPanel = !showBackgroundPanel">▧ 背景</button>
+            </div>
+        </header>
+
+        <!-- ===== 背景面板 ===== -->
+        <section v-if="showBackgroundPanel" class="bg-panel">
+            <div class="bg-head"><b>界面底图</b><button @click="showBackgroundPanel=false">×</button></div>
+            <div class="bg-preset-grid">
+                <button v-for="p in backgroundPresets" :key="p.id" class="bg-preset" :class="{active:backgroundPreset===p.value && !backgroundImage}" :style="{'--preview':p.value}" :title="p.name" @click="chooseBackgroundPreset(p.value)"></button>
+            </div>
+            <label class="bg-upload">＋ 上传本地背景图 <input type="file" accept="image/png,image/jpeg,image/webp" @change="handleBackgroundUpload"></label>
+            <div class="bg-slider"><span>遮罩</span><input type="range" min="0" max="0.9" step="0.05" v-model.number="backgroundDim"><b>{{Math.round(backgroundDim*100)}}%</b></div>
+            <div class="bg-slider"><span>模糊</span><input type="range" min="0" max="16" step="1" v-model.number="backgroundBlur"><b>{{backgroundBlur}}px</b></div>
+            <div class="bg-actions"><button @click="resetBackground">恢复默认</button><button @click="showBackgroundPanel=false">关闭</button></div>
+        </section>
+
+        <!-- ===== 主布局 ===== -->
+        <div class="app-main">
+
+            <!-- ===== 左侧面板 ===== -->
+            <aside class="sidebar-left surface" style="background:rgba(6,16,24,0.92);border-color:#1a4a5e;">
+                <div class="sidebar-inner">
+
+                    <!-- ====== 节点详情视图 ====== -->
+                    <template v-if="selectedNode">
+                        <div class="sidebar-title">
+                            <div class="title-row">
+                                <div class="icon-badge" :style="{background: 'linear-gradient(135deg, ' + (selectedNode ? selectedNode.color : '#4ad4e0') + ', #1a8fba)'}">
+                                    {{ selectedNode ? (selectedNode.icon || '🏢') : '浙' }}
+                                </div>
+                                <div>
+                                    <h2>{{ selectedNode ? selectedNode.name : '浙江交通集团' }}</h2>
+                                    <p class="sub">{{ selectedNode ? selectedNode.subtitle : '省级交通投融资主平台' }}</p>
+                                </div>
+                            </div>
+                            <button class="btn-close-node" @click="closeNodeInfo">✕ 关闭</button>
+                        </div>
+
+                        <div class="detail-tabs" :style="{'--sel': selectedNode ? selectedNode.color : '#4ad4e0'}">
+                            <button v-for="t in tabList" :key="t.id" class="tab-item" :class="{active: activeTab === t.id}" @click="activeTab = t.id">{{ t.name }}</button>
+                        </div>
+
+                        <div class="detail-content">
+                            <div class="kicker">{{ activeContent.kicker }}</div>
+                            <h3>{{ activeContent.title }}</h3>
+                            <p>{{ activeContent.content }}</p>
+                            <div class="detail-tags">
+                                <span v-for="(t, idx) in (selectedNode ? selectedNode.tags : [])" :key="idx">{{ t }}</span>
+                            </div>
+                            <div class="meta-info">
+                                <span v-if="selectedNode && selectedNode.bgImage">🖼️ {{ selectedNode.bgImage.split('/').pop() }}</span>
+                                <span v-if="selectedNode && selectedNode.bgAudio">🔊 {{ selectedNode.bgAudio.split('/').pop() }}</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ====== 总部仪表板视图 ====== -->
+                    <template v-else>
+                        <div class="sidebar-title">
+                            <div class="title-row">
+                                <div class="icon-badge">浙</div>
+                                <div>
+                                    <h2>浙江交通集团</h2>
+                                    <p class="sub">省级交通投融资主平台</p>
+                                </div>
+                            </div>
+                            <div class="tags-row">
+                                <span>世界500强</span>
+                                <span class="tag-gray">AAA</span>
+                                <span class="tag-gray">惠誉A+</span>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-body">
+                            <!-- 85522 战略目标 -->
+                            <div class="goal-grid">
+                                <div class="goal-card goal-highlight">
+                                    <div style="font-size:18px;color:#4ad4e0;font-weight:600;">2030</div>
+                                    <div style="font-size:16px;">战略目标</div>
+                                </div>
+                                <div class="goal-card">
+                                    <div class="num">8000<small class="unit">km</small></div>
+                                    <div class="label">高速+铁路里程</div>
+                                </div>
+                                <div class="goal-card goal-green">
+                                    <div class="num">5000<small class="unit">亿</small></div>
+                                    <div class="label">年营收规模</div>
+                                </div>
+                                <div class="goal-card goal-orange">
+                                    <div class="num">50<small class="unit">亿</small></div>
+                                    <div class="label">年研发投入</div>
+                                </div>
+                                <div class="goal-card goal-purple">
+                                    <div class="num">200<small class="unit">亿</small></div>
+                                    <div class="label">年利润总额</div>
+                                </div>
+                                <div class="goal-card goal-red">
+                                    <div class="num">20<small class="unit">%+</small></div>
+                                    <div class="label">国际化程度</div>
+                                </div>
+                            </div>
+
+                            <!-- 营收增长折线图 -->
+                            <div class="chart-box">
+                                <div class="chart-head">
+                                    <span class="title">📈 营业收入（亿元）</span>
+                                    <span class="period">2018-2024</span>
+                                </div>
+                                <svg viewBox="0 0 320 90" style="width:100%;height:85px;">
+                                    <line x1="0" y1="74" x2="320" y2="74" stroke="rgba(42,90,106,0.15)" stroke-width="0.5"/>
+                                    <line x1="0" y1="56" x2="320" y2="56" stroke="rgba(42,90,106,0.10)" stroke-width="0.5"/>
+                                    <line x1="0" y1="38" x2="320" y2="38" stroke="rgba(42,90,106,0.10)" stroke-width="0.5"/>
+                                    <line x1="0" y1="20" x2="320" y2="20" stroke="rgba(42,90,106,0.10)" stroke-width="0.5"/>
+                                    <defs>
+                                        <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#4ad4e0" stop-opacity="0.35"/>
+                                            <stop offset="100%" stop-color="#4ad4e0" stop-opacity="0.02"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <polygon points="20,74 60,64 100,56 140,36 180,24 220,28 260,12 300,16 300,74 20,74" fill="url(#gradRevenue)"/>
+                                    <polyline points="20,69 60,67 100,59 140,40 180,28 220,30 260,14 300,18" fill="none" stroke="#4ad4e0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="20" cy="69" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="60" cy="67" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="100" cy="59" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="140" cy="40" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="180" cy="28" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="220" cy="30" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="260" cy="14" r="4.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5" style="filter:drop-shadow(0 0 6px rgba(74,212,224,0.5));"/>
+                                    <circle cx="300" cy="18" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <text x="20" y="84" font-size="8" fill="#506a75" text-anchor="middle">2018</text>
+                                    <text x="60" y="84" font-size="8" fill="#506a75" text-anchor="middle">2019</text>
+                                    <text x="100" y="84" font-size="8" fill="#506a75" text-anchor="middle">2020</text>
+                                    <text x="140" y="84" font-size="8" fill="#506a75" text-anchor="middle">2021</text>
+                                    <text x="180" y="84" font-size="8" fill="#506a75" text-anchor="middle">2022</text>
+                                    <text x="220" y="84" font-size="8" fill="#506a75" text-anchor="middle">2023</text>
+                                    <text x="260" y="84" font-size="8" fill="#4ad4e0" text-anchor="middle">2024</text>
+                                    <text x="300" y="84" font-size="8" fill="#506a75" text-anchor="middle">2025E</text>
+                                    <text x="20" y="63" font-size="7" fill="#8bb4c0" text-anchor="middle">1377</text>
+                                    <text x="60" y="61" font-size="7" fill="#8bb4c0" text-anchor="middle">1471</text>
+                                    <text x="100" y="53" font-size="7" fill="#8bb4c0" text-anchor="middle">1944</text>
+                                    <text x="140" y="34" font-size="7" fill="#8bb4c0" text-anchor="middle">2992</text>
+                                    <text x="180" y="22" font-size="7" fill="#8bb4c0" text-anchor="middle">3136</text>
+                                    <text x="220" y="24" font-size="7" fill="#8bb4c0" text-anchor="middle">3288</text>
+                                    <text x="260" y="8" font-size="7" fill="#4ad4e0" text-anchor="middle">3308</text>
+                                    <text x="300" y="12" font-size="7" fill="#506a75" text-anchor="middle">3500</text>
+                                </svg>
+                                <div class="chart-foot">
+                                    <span>2018: 1377亿</span>
+                                    <span class="highlight">2024: 3308亿</span>
+                                    <span>↑ 140%</span>
+                                </div>
+                            </div>
+
+                            <!-- 资产总额 + 利润总额 双柱 -->
+                            <div class="chart-row-2">
+                                <div class="chart-box">
+                                    <div class="chart-head">
+                                        <span class="title">🏦 资产总额（亿元）</span>
+                                        <span class="period">2020-2024</span>
+                                    </div>
+                                    <svg viewBox="0 0 140 70" style="width:100%;height:65px;">
+                                        <rect x="6" y="36" width="20" height="30" fill="rgba(60,140,255,0.6)" rx="2"/>
+                                        <rect x="32" y="28" width="20" height="38" fill="rgba(60,140,255,0.7)" rx="2"/>
+                                        <rect x="58" y="22" width="20" height="44" fill="rgba(60,140,255,0.8)" rx="2"/>
+                                        <rect x="84" y="14" width="20" height="52" fill="rgba(60,140,255,0.9)" rx="2"/>
+                                        <rect x="110" y="8" width="20" height="58" fill="#3c8cff" rx="2" style="filter:drop-shadow(0 0 8px rgba(60,140,255,0.3));"/>
+                                        <text x="16" y="30" font-size="7" fill="#8bb4c0" text-anchor="middle">5949</text>
+                                        <text x="42" y="22" font-size="7" fill="#8bb4c0" text-anchor="middle">7454</text>
+                                        <text x="68" y="16" font-size="7" fill="#8bb4c0" text-anchor="middle">8405</text>
+                                        <text x="94" y="8" font-size="7" fill="#8bb4c0" text-anchor="middle">9313</text>
+                                        <text x="120" y="2" font-size="7" fill="#4ad4e0" text-anchor="middle">10011</text>
+                                        <text x="16" y="66" font-size="7" fill="#506a75" text-anchor="middle">2020</text>
+                                        <text x="42" y="66" font-size="7" fill="#506a75" text-anchor="middle">2021</text>
+                                        <text x="68" y="66" font-size="7" fill="#506a75" text-anchor="middle">2022</text>
+                                        <text x="94" y="66" font-size="7" fill="#506a75" text-anchor="middle">2023</text>
+                                        <text x="120" y="66" font-size="7" fill="#4ad4e0" text-anchor="middle">2024</text>
+                                    </svg>
+                                    <div class="chart-foot">
+                                        <span>2020: 5949亿</span>
+                                        <span class="highlight">2024: 10011亿</span>
+                                    </div>
+                                </div>
+                                <div class="chart-box">
+                                    <div class="chart-head">
+                                        <span class="title">💰 利润总额（亿元）</span>
+                                        <span class="period">2020-2024</span>
+                                    </div>
+                                    <svg viewBox="0 0 140 70" style="width:100%;height:65px;">
+                                        <rect x="6" y="30" width="20" height="36" fill="rgba(74,212,224,0.5)" rx="2"/>
+                                        <rect x="32" y="22" width="20" height="44" fill="rgba(74,212,224,0.7)" rx="2"/>
+                                        <rect x="58" y="26" width="20" height="40" fill="rgba(74,212,224,0.6)" rx="2"/>
+                                        <rect x="84" y="30" width="20" height="36" fill="rgba(74,212,224,0.5)" rx="2"/>
+                                        <rect x="110" y="34" width="20" height="32" fill="rgba(74,212,224,0.4)" rx="2"/>
+                                        <text x="16" y="24" font-size="7" fill="#8bb4c0" text-anchor="middle">118</text>
+                                        <text x="42" y="16" font-size="7" fill="#8bb4c0" text-anchor="middle">146</text>
+                                        <text x="68" y="20" font-size="7" fill="#8bb4c0" text-anchor="middle">131</text>
+                                        <text x="94" y="24" font-size="7" fill="#8bb4c0" text-anchor="middle">117</text>
+                                        <text x="120" y="28" font-size="7" fill="#8bb4c0" text-anchor="middle">110</text>
+                                        <text x="16" y="66" font-size="7" fill="#506a75" text-anchor="middle">2020</text>
+                                        <text x="42" y="66" font-size="7" fill="#506a75" text-anchor="middle">2021</text>
+                                        <text x="68" y="66" font-size="7" fill="#506a75" text-anchor="middle">2022</text>
+                                        <text x="94" y="66" font-size="7" fill="#506a75" text-anchor="middle">2023</text>
+                                        <text x="120" y="66" font-size="7" fill="#506a75" text-anchor="middle">2024</text>
+                                    </svg>
+                                    <div class="chart-foot">
+                                        <span>2020: 118亿</span>
+                                        <span class="highlight">峰值 146亿</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 业务结构饼图 + 高速里程 -->
+                            <div class="chart-row-2">
+                                <div class="chart-box">
+                                    <div class="chart-head">
+                                        <span class="title">📊 业务结构</span>
+                                        <span class="period">一体两翼</span>
+                                    </div>
+                                    <svg viewBox="0 0 120 90" style="width:100%;height:75px;">
+                                        <circle cx="45" cy="45" r="30" fill="none" stroke="#1a3644" stroke-width="12"/>
+                                        <circle cx="45" cy="45" r="30" fill="none" stroke="#4ad4e0" stroke-width="12"
+                                            stroke-dasharray="15.8 173.9" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+                                        <circle cx="45" cy="45" r="30" fill="none" stroke="#44d6a1" stroke-width="12"
+                                            stroke-dasharray="96.5 93.2" stroke-dashoffset="-15.8" transform="rotate(-90 45 45)"/>
+                                        <circle cx="45" cy="45" r="30" fill="none" stroke="#a97cff" stroke-width="12"
+                                            stroke-dasharray="63.2 126.5" stroke-dashoffset="-112.3" transform="rotate(-90 45 45)"/>
+                                        <circle cx="45" cy="45" r="7" fill="#061018" stroke="#1a3644" stroke-width="1"/>
+                                        <rect x="85" y="26" width="8" height="8" rx="1" fill="#4ad4e0"/>
+                                        <text x="95" y="32" font-size="8" fill="#8bb4c0">基建 9%</text>
+                                        <rect x="85" y="40" width="8" height="8" rx="1" fill="#44d6a1"/>
+                                        <text x="95" y="46" font-size="8" fill="#8bb4c0">关联产业 55%</text>
+                                        <rect x="85" y="54" width="8" height="8" rx="1" fill="#a97cff"/>
+                                        <text x="95" y="60" font-size="8" fill="#8bb4c0">产业金融 36%</text>
+                                    </svg>
+                                    <div class="chart-foot" style="justify-content:center;gap:12px;">
+                                        <span>两翼贡献 <span class="highlight">91%</span> 营收</span>
+                                        <span>两翼贡献 <span class="highlight">92%</span> 利润</span>
+                                    </div>
+                                </div>
+                                <div class="chart-box">
+                                    <div class="chart-head">
+                                        <span class="title">🛣️ 高速里程（km）</span>
+                                        <span class="period">控股运营</span>
+                                    </div>
+                                    <svg viewBox="0 0 140 65" style="width:100%;height:60px;">
+                                        <polyline points="10,48 60,34 100,26 130,12" fill="none" stroke="#44d6a1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="10" cy="48" r="3.5" fill="#44d6a1" stroke="#061018" stroke-width="1.5"/>
+                                        <circle cx="60" cy="34" r="4" fill="#44d6a1" stroke="#061018" stroke-width="1.5"/>
+                                        <circle cx="100" cy="26" r="4" fill="#44d6a1" stroke="#061018" stroke-width="1.5"/>
+                                        <circle cx="130" cy="12" r="4.5" fill="#44d6a1" stroke="#061018" stroke-width="1.5" style="filter:drop-shadow(0 0 8px rgba(68,214,161,0.4));"/>
+                                        <text x="10" y="58" font-size="8" fill="#506a75" text-anchor="middle">2015</text>
+                                        <text x="60" y="58" font-size="8" fill="#506a75" text-anchor="middle">2021</text>
+                                        <text x="100" y="58" font-size="8" fill="#506a75" text-anchor="middle">2022</text>
+                                        <text x="130" y="58" font-size="8" fill="#44d6a1" text-anchor="middle">2024</text>
+                                        <text x="10" y="43" font-size="7" fill="#8bb4c0" text-anchor="middle">~1000</text>
+                                        <text x="60" y="29" font-size="7" fill="#8bb4c0" text-anchor="middle">2962</text>
+                                        <text x="100" y="21" font-size="7" fill="#8bb4c0" text-anchor="middle">3152</text>
+                                        <text x="130" y="7" font-size="7" fill="#44d6a1" text-anchor="middle">3581</text>
+                                    </svg>
+                                    <div class="chart-foot">
+                                        <span>占全省 <span class="highlight">64.2%</span></span>
+                                        <span class="highlight">目标 8000km</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 底部：关键里程碑 -->
+                            <div class="milestone-box">
+                                <div class="milestone-head">
+                                    <span class="label">📌 关键里程碑</span>
+                                    <span>数据来源：公开年报</span>
+                                </div>
+                                <div class="milestone-grid">
+                                    <div><div class="year">2021</div><div class="desc">首入世界500强</div></div>
+                                    <div><div class="year">2022</div><div class="desc">营收突破3000亿</div></div>
+                                    <div><div class="year">2024</div><div class="desc">资产破万亿</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- ====== 结束视图切换 ====== -->
+
+                </div>
+                <!-- /sidebar-inner -->
+            </aside>
+
+            <!-- ===== 中间：图谱 ===== -->
+            <section class="graph-wrap surface" ref="graphContainer" @click="handleGraphClick">
+                <div class="graph-bg" :class="{active: currentBgImage}" :style="{'background-image': 'url(' + currentBgImage + ')'}"></div>
+
+                <div class="graph-overlay">
+                    <!-- 工具栏 -->
+                    <div class="graph-tools">
+                        <input class="search-input" v-model.trim="keyword" placeholder="输入单位名称…" />
+                        <button class="btn-tool" @click="handleSearch">搜索</button>
+                        <button class="filter-btn" :class="{active: filter === 'all'}" style="--c:#4ad4e0" @click="handleFocus('all')">全部</button>
+                        <button v-for="s in sectors" :key="s.id" class="filter-btn" :class="{active: filter === s.id}" :style="{'--c': s.color}" @click="handleFocus(s.id)">{{ s.short }}</button>
+                        <label class="file-btn">📁 导入Excel<input type="file" accept=".xlsx,.xls" @change="handleFileUpload" /></label>
+                        <span class="ds-label" v-if="dataSource">📊 {{ dataSource }}</span>
+                    </div>
+
+                    <div v-if="loading" class="loading-overlay">
+                        <div><div class="loading-spinner"></div><p>正在计算布局…</p></div>
+                    </div>
+
+                    <!-- 缩放 -->
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" @click="zoomIn" title="放大">＋</button>
+                        <div class="zoom-level">{{ Math.round(zoomScale * 100) }}%</div>
+                        <button class="zoom-btn" @click="zoomOut" title="缩小">−</button>
+                        <button class="zoom-btn" @click="focusOnRoot" title="回正" style="font-size:13px;">⟲</button>
+                    </div>
+
+                    <!-- 舞台 -->
+                    <div class="stage-wrapper" ref="stageWrapper" @wheel="onWheel" @mousedown="onDragStart" @mousemove="onDragMove" @mouseup="onDragEnd" @mouseleave="onDragEnd" @dblclick="focusOnRoot">
+                        <div class="stage" :style="[stageTransform, stageDimensions]">
+                            <!-- 连线 -->
+                            <svg class="edges" :viewBox="stageViewBox" preserveAspectRatio="xMidYMid meet">
+                                <g v-for="e in edges" :key="e.from + '-' + e.to">
+                                    <path class="edge" :class="{
+                                        main: e.main,
+                                        curve: !e.main,
+                                        on: isEdgeActive(e),
+                                        off: isEdgeDimmed(e),
+                                        'active-glow': isEdgeActive(e) && !e.main
+                                    }" :style="{'--c': getNodeById(e.to).color}" :d="getEdgePath(e)" />
+                                    <circle v-if="isEdgeActive(e)" class="particle" :style="{'--c': getNodeById(e.to).color}" r="3.5">
+                                        <animateMotion dur="2.4s" repeatCount="indefinite" :path="getEdgePath(e)" />
+                                    </circle>
+                                </g>
+                            </svg>
+
+                            <!-- 节点 -->
+                            <button v-for="(n, idx) in visibleNodes" :key="n.id" class="node" :class="[
+                                n.type,
+                                {
+                                    selected: selectedNode && selectedNode.id === n.id,
+                                    dim: isNodeDimmed(n),
+                                    'hidden-company': n.type === 'company' && !isCompanyVisible(n),
+                                    show: n.type === 'company' && isCompanyVisible(n)
+                                }
+                            ]" :style="{
+                                '--x': n.x,
+                                '--y': n.y,
+                                '--c': n.color,
+                                '--idx': idx
+                            }" @click.stop="handleSelectNode(n)">
+                                <template v-if="n.type === 'root'">
+                                    <b>{{ n.name }}</b>
+                                    <small>{{ n.subtitle }}</small>
+                                </template>
+                                <template v-else-if="n.type === 'sector'">
+                                    <b>{{ n.name }}</b>
+                                    <small>{{ n.subtitle }}</small>
+                                </template>
+                                <template v-else>
+                                    <b>{{ n.name }}</b>
+                                    <small>{{ n.subtitle }}</small>
+                                </template>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== 右侧：数字人 + 字幕 ===== -->
+            <aside class="sidebar-right" :style="{'--sel': selectedNode ? selectedNode.color : '#4ad4e0'}">
+
+                <!-- 数字人 -->
+                <section class="human-wrap surface" :class="{talking: isSpeaking}">
+                    <div class="human-inner">
+                        <div class="human-top">
+                            <b>🤖 数字人讲解员</b>
+                            <span class="status-badge">{{ humanStatusLabel }}</span>
+                        </div>
+
+                        <div class="human-slot">
+                            <video ref="humanVideoA" class="human-video" :class="{active: activeHumanSlot === 'a', hidden: videoError}" src="./aihuman/Stand.webm" autoplay muted loop playsinline preload="auto" @loadeddata="onHumanVideoReady" @error="onHumanVideoError"></video>
+                            <video ref="humanVideoB" class="human-video" :class="{active: activeHumanSlot === 'b', hidden: videoError}" muted playsinline preload="auto" @error="onHumanVideoError"></video>
+                            <template v-if="videoError">
+                                <div class="ring"></div>
+                                <div class="person"><div class="head"></div><div class="neck"></div><div class="body"></div><div class="core"></div></div>
+                                <div class="slot-text">动作加载失败，请检查 aihuman/</div>
+                            </template>
+                            <span v-else class="video-badge">{{ videoLoaded ? '动作已就绪' : '加载中…' }}</span>
+                            <span v-if="!videoError" class="action-state">{{ humanStateLabel }}</span>
+                        </div>
+
+                        <audio ref="narrationAudio" preload="metadata" @play="onNarrationStart" @ended="onNarrationEnd" @pause="onNarrationPause"></audio>
+
+                        <div class="human-actions">
+                            <button class="voice-btn" @click="playNarration">▶ 播报</button>
+                            <button class="voice-btn stop" @click="stopNarration">■ 中断</button>
+                            <small>{{ videoError ? '视频不可用' : humanStateLabel }}</small>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 字幕 -->
+                <section class="subtitle-wrap surface" :class="{playing: isSpeaking}">
+                    <div class="subtitle-inner">
+                        <div class="subtitle-head">
+                            <b>📝 实时字幕</b>
+                            <span>
+                                {{ isSpeaking ? '● 讲解中' : '○ 待播放' }}
+                                <template v-if="narrationSource"> · {{ narrationSource }}</template>
+                            </span>
+                        </div>
+                        <div class="subtitle-text">
+                            <div class="text-content" v-html="displayedTextWithCursor"></div>
+                            <!-- 追问 -->
+                            <div v-if="showFollowup" class="followup" :style="{'--sel': selectedNode ? selectedNode.color : '#4ad4e0'}">
+                                <b>还想了解什么？</b>
+                                <div class="followup-grid">
+                                    <div class="followup-card">
+                                        <strong>企业文化</strong>
+                                        <div class="followup-actions">
+                                            <button @click="continueIntroduction('culture')">介绍文化</button>
+                                            <button @click="continueIntroduction('overview')">企业概况</button>
+                                        </div>
+                                    </div>
+                                    <div v-if="selectedNode && selectedNode.graduateVideoPath" class="followup-card">
+                                        <strong>应届生视频</strong>
+                                        <div class="followup-actions">
+                                            <button @click="openGraduateVideo">观看</button>
+                                        </div>
+                                    </div>
+                                    <div v-else class="followup-card" style="opacity:0.6;">
+                                        <strong>业务介绍</strong>
+                                        <div class="followup-actions">
+                                            <button @click="continueIntroduction('business')">了解业务</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="followup-dismiss" @click="showFollowup=false">结束介绍</button>
+                            </div>
+                        </div>
+                        <div class="waves"><i v-for="i in 24" :key="i"></i></div>
+                    </div>
+                </section>
+            </aside>
+
+        </div>
+        <!-- /app-main -->
+
+        <!-- 视频弹窗 -->
+        <div v-if="showGraduateVideo" class="video-modal" @click.self="closeGraduateVideo">
+            <div class="video-dialog surface">
+                <button class="modal-close" @click="closeGraduateVideo">×</button>
+                <video ref="graduateVideo" :src="graduateVideoSrc" controls autoplay playsinline @loadeddata="graduateVideoError = ''" @error="onGraduateVideoError" @ended="closeGraduateVideo"></video>
+                <div v-if="graduateVideoError" class="video-error-message">{{ graduateVideoError }}</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, reactive, computed, ref, onMounted, onBeforeUnmount, nextTick, watch } = Vue;
+
+        // ===== 配置 =====
+        const CONFIG = {
+            colors: {
+                root: '#4ad4e0',
+                smart: '#4ad4e0',
+                infra: '#3c8cff',
+                supply: '#44d6a1',
+                finance: '#a97cff',
+                industry: '#ffad5c',
+                tech: '#ff6b6b'
+            },
+            sectorMap: {
+                's': { name: '智慧交通', short: '智慧', colorKey: 'smart' },
+                'i': { name: '新基建', short: '基建', colorKey: 'infra' },
+                'l': { name: '新供应链', short: '供应链', colorKey: 'supply' },
+                'f': { name: '新金融', short: '金融', colorKey: 'finance' },
+                'n': { name: '新产业', short: '产业', colorKey: 'industry' },
+                't': { name: '创新特区', short: '创新', colorKey: 'tech' }
+            },
+            layout: {
+                minStageWidth: 1000,
+                minStageHeight: 700,
+                sectorRadius: 210,
+                firstCompanyRadius: 380,
+                companyRingGap: 110,
+                companyMinGap: 130,
+                outerPadding: 130
+            }
+        };
+
+        // ===== 默认数据 =====
+        const DEFAULT_DATA = {
+            sectors: [
+                { id: 's', name: '智慧交通', short: '智慧', color: CONFIG.colors.smart },
+                { id: 'i', name: '新基建', short: '基建', color: CONFIG.colors.infra },
+                { id: 'l', name: '新供应链', short: '供应链', color: CONFIG.colors.supply },
+                { id: 'f', name: '新金融', short: '金融', color: CONFIG.colors.finance },
+                { id: 'n', name: '新产业', short: '产业', color: CONFIG.colors.industry },
+                { id: 't', name: '创新特区', short: '创新', color: CONFIG.colors.tech }
+            ],
+            nodes: [{
+                id: 'root',
+                type: 'root',
+                name: '浙江交通集团',
+                subtitle: '省级交通投融资主平台',
+                icon: '浙交',
+                sector: '',
+                color: CONFIG.colors.root,
+                tags: ['综合交通', '投资建设', '运营管理'],
+                intro: '浙江省综合交通投融资主平台和综合交通建设主力军。',
+                business: '统筹交通基础设施投资、建设、运营和产业协同。',
+                culture: '打造价值卓越的国际综合交通产业投资集团。',
+                bgImage: 'images/group-bg.jpg',
+                bgAudio: 'audio/group-intro.mp3'
+            }, {
+                id: 's',
+                type: 'sector',
+                name: '智慧交通',
+                subtitle: '"1"核心引擎',
+                icon: '智',
+                sector: '',
+                color: CONFIG.colors.smart,
+                tags: ['数字交通', '智慧高速'],
+                intro: '以数字化和智能化推动交通基础设施及出行服务升级。',
+                business: '聚焦智慧交通核心技术研发与产业化应用。',
+                culture: '科技赋能交通，让出行更便捷。',
+                bgImage: 'images/smart-bg.jpg',
+                bgAudio: 'audio/smart-intro.mp3'
+            }, {
+                id: 'i',
+                type: 'sector',
+                name: '新基建',
+                subtitle: '"4"之一',
+                icon: '基',
+                sector: '',
+                color: CONFIG.colors.infra,
+                tags: ['高速公路', '工程建设'],
+                intro: '聚焦高速公路、铁路、轨道交通及综合枢纽建设。',
+                business: '开展交通基础设施投资建设与运营管理。',
+                culture: '建设人民满意交通。',
+                bgImage: 'images/infra-bg.jpg',
+                bgAudio: 'audio/infra-intro.mp3'
+            }, {
+                id: 'l',
+                type: 'sector',
+                name: '新供应链',
+                subtitle: '"4"之一',
+                icon: '链',
+                sector: '',
+                color: CONFIG.colors.supply,
+                tags: ['供应链', '现代物流'],
+                intro: '以数字供应链和现代物流提升产业协同效率。',
+                business: '整合产业链资源，提供一体化供应链服务。',
+                culture: '让产业链更集约、更高效。',
+                bgImage: 'images/supply-bg.jpg',
+                bgAudio: 'audio/supply-intro.mp3'
+            }, {
+                id: 'f',
+                type: 'sector',
+                name: '新金融',
+                subtitle: '"4"之一',
+                icon: '融',
+                sector: '',
+                color: CONFIG.colors.finance,
+                tags: ['证券', '保险'],
+                intro: '发挥证券、保险等金融能力支持实体经济。',
+                business: '提供综合金融服务，赋能产业升级。',
+                culture: '金融赋能产业，价值共同成长。',
+                bgImage: 'images/finance-bg.jpg',
+                bgAudio: 'audio/finance-intro.mp3'
+            }, {
+                id: 'n',
+                type: 'sector',
+                name: '新产业',
+                subtitle: '"4"之一',
+                icon: '产',
+                sector: '',
+                color: CONFIG.colors.industry,
+                tags: ['新材料', '交通资源'],
+                intro: '围绕交通资源与新材料培育发展新动能。',
+                business: '布局战略新兴产业，培育新增长点。',
+                culture: '创新产业价值，共育美好未来。',
+                bgImage: 'images/industry-bg.jpg',
+                bgAudio: 'audio/industry-intro.mp3'
+            }, {
+                id: 't',
+                type: 'sector',
+                name: '创新特区',
+                subtitle: '新增长极',
+                icon: '创',
+                sector: '',
+                color: CONFIG.colors.tech,
+                tags: ['前沿技术', '成果转化'],
+                intro: '聚焦前沿技术研发与产业化应用，打造创新驱动新引擎。',
+                business: '开展新技术、新产业、新模式的探索与孵化。',
+                culture: '敢为人先，追求卓越。',
+                bgImage: 'images/tech-bg.jpg',
+                bgAudio: 'audio/tech-intro.mp3'
+            }, {
+                id: 'gx',
+                type: 'company',
+                name: '浙江高信',
+                subtitle: '数字化平台',
+                icon: '高',
+                sector: 's',
+                color: CONFIG.colors.smart,
+                tags: ['数字基建', '数据服务'],
+                intro: '集团交通信息与数字化业务发展平台。',
+                business: '提供智慧交通规划、数字基础设施和数据增值服务。',
+                culture: '让出行更便捷，让生活更美好。',
+                bgImage: 'images/gx-bg.jpg',
+                bgAudio: 'audio/gx-intro.mp3'
+            }, {
+                id: 'sj',
+                type: 'company',
+                name: '数智交院',
+                subtitle: '工程科技咨询',
+                icon: '数',
+                sector: 's',
+                color: CONFIG.colors.smart,
+                tags: ['规划设计', '科技研发'],
+                intro: '集规划、勘察、设计、检测和科技数字化于一体。',
+                business: '开展综合交通规划、工程咨询、检测和数字化研发。',
+                culture: '路更畅，城更美 · 知行合一，追求卓越。',
+                bgImage: 'images/sj-bg.jpg',
+                bgAudio: 'audio/sj-intro.mp3'
+            }, {
+                id: 'hh',
+                type: 'company',
+                name: '浙江沪杭甬',
+                subtitle: '高速运营',
+                icon: '路',
+                sector: 'i',
+                color: CONFIG.colors.infra,
+                tags: ['高速运营', '上市公司'],
+                intro: '浙江省第一家高速公路专业化运营企业。',
+                business: '开展高速公路投资、建设、运营和养护。',
+                culture: '畅行美好生活，服务交通强国。',
+                bgImage: 'images/hh-bg.jpg',
+                bgAudio: 'audio/hh-intro.mp3'
+            }, {
+                id: 'jg',
+                type: 'company',
+                name: '浙江交工',
+                subtitle: '工程建设',
+                icon: '工',
+                sector: 'i',
+                color: CONFIG.colors.infra,
+                tags: ['工程施工', '桥隧建设'],
+                intro: '集团交通工程建设重要专业力量。',
+                business: '承担公路、桥梁、隧道和市政工程建设。',
+                culture: '匠心筑路，品质致远。',
+                bgImage: 'images/jg-bg.jpg',
+                bgAudio: 'audio/jg-intro.mp3'
+            }, {
+                id: 'zt',
+                type: 'company',
+                name: '浙商中拓',
+                subtitle: '供应链服务',
+                icon: '拓',
+                sector: 'l',
+                color: CONFIG.colors.supply,
+                tags: ['供应链', '产业金融'],
+                intro: '集团控股的供应链集成服务上市公司。',
+                business: '提供采购、库存、销售、物流、风险管理和产业金融服务。',
+                culture: '创业、创新、创效 · 让产业链更集约更高效。',
+                bgImage: 'images/zt-bg.jpg',
+                bgAudio: 'audio/zt-intro.mp3'
+            }, {
+                id: 'wl',
+                type: 'company',
+                name: '交投物流集团',
+                subtitle: '现代物流',
+                icon: '物',
+                sector: 'l',
+                color: CONFIG.colors.supply,
+                tags: ['智慧园区', '数智运输'],
+                intro: '建设线上线下一体化综合物流服务体系。',
+                business: '整合货源、运力、仓储、金融及后服务资源。',
+                culture: '数智链接资源，高效服务产业。',
+                bgImage: 'images/wl-bg.jpg',
+                bgAudio: 'audio/wl-intro.mp3'
+            }, {
+                id: 'zq',
+                type: 'company',
+                name: '浙商证券',
+                subtitle: '综合金融',
+                icon: '证',
+                sector: 'f',
+                color: CONFIG.colors.finance,
+                tags: ['证券', '财富管理'],
+                intro: '浙江省首家国有控股上市券商。',
+                business: '提供财富管理、投资银行、资管和机构金融服务。',
+                culture: '同创、同享、同成长。',
+                bgImage: 'images/zq-bg.jpg',
+                bgAudio: 'audio/zq-intro.mp3'
+            }, {
+                id: 'bx',
+                type: 'company',
+                name: '浙商保险',
+                subtitle: '风险保障',
+                icon: '保',
+                sector: 'f',
+                color: CONFIG.colors.finance,
+                tags: ['保险', '风险保障'],
+                intro: '总部位于杭州的全国性综合财产保险公司。',
+                business: '提供车辆、企财、责任及工程保险服务。',
+                culture: '诚信相伴，托付永远 · 同责、同心、同创。',
+                bgImage: 'images/bx-bg.jpg',
+                bgAudio: 'audio/bx-intro.mp3'
+            }, {
+                id: 'zy',
+                type: 'company',
+                name: '镇洋发展',
+                subtitle: '绿色新材料',
+                icon: '镇',
+                sector: 'n',
+                color: CONFIG.colors.industry,
+                tags: ['绿色化工', '新材料'],
+                intro: '集团控股的绿色化工新材料上市公司。',
+                business: '开展氯碱化工、有机化工和新材料研发生产。',
+                culture: '规范、尽职、创新、进取。',
+                bgImage: 'images/zy-bg.jpg',
+                bgAudio: 'audio/zy-intro.mp3'
+            }, {
+                id: 'zyy',
+                type: 'company',
+                name: '交通资源集团',
+                subtitle: '资源运营',
+                icon: '资',
+                sector: 'n',
+                color: CONFIG.colors.industry,
+                tags: ['矿产资源', '绿色矿山'],
+                intro: '形成矿产资源、沥青和交通建材产业格局。',
+                business: '布局矿产资源、沥青、交通建材及绿色矿山运营。',
+                culture: '创新有限资源价值，共育行业无限未来。',
+                bgImage: 'images/zyy-bg.jpg',
+                bgAudio: 'audio/zyy-intro.mp3'
+            }, {
+                id: 'jszy',
+                type: 'company',
+                name: '技术总院',
+                subtitle: '前沿技术研发',
+                icon: '研',
+                sector: 't',
+                color: CONFIG.colors.tech,
+                tags: ['人工智能', '大数据', '新能源'],
+                intro: '集团前沿技术研发与创新孵化平台。',
+                business: '开展人工智能、大数据、新能源等关键技术研发与成果转化。',
+                culture: '创新驱动，引领未来。',
+                bgImage: 'images/jszy-bg.jpg',
+                bgAudio: 'audio/jszy-intro.mp3'
+            }],
+            edges: [
+                { from: 'root', to: 's', main: true },
+                { from: 'root', to: 'i', main: true },
+                { from: 'root', to: 'l', main: true },
+                { from: 'root', to: 'f', main: true },
+                { from: 'root', to: 'n', main: true },
+                { from: 'root', to: 't', main: true },
+                { from: 's', to: 'gx', main: false },
+                { from: 's', to: 'sj', main: false },
+                { from: 'i', to: 'hh', main: false },
+                { from: 'i', to: 'jg', main: false },
+                { from: 'l', to: 'zt', main: false },
+                { from: 'l', to: 'wl', main: false },
+                { from: 'f', to: 'zq', main: false },
+                { from: 'f', to: 'bx', main: false },
+                { from: 'n', to: 'zy', main: false },
+                { from: 'n', to: 'zyy', main: false },
+                { from: 't', to: 'jszy', main: false }
+            ]
+        };
+
+        let sectorsDataMap = {};
+        DEFAULT_DATA.sectors.forEach(s => { sectorsDataMap[s.id] = s;
+            sectorsDataMap[s.name] = s; });
+
+        // ===== 布局引擎 =====
+        class LayoutEngine {
+            constructor(config) { this.config = config;
+                this.bounds = { width: config.layout.minStageWidth, height: config.layout.minStageHeight }; }
+            calculate(nodes, edges) {
+                const cfg = this.config.layout;
+                const sectorNodes = nodes.filter(n => n.type === 'sector');
+                const companyNodes = nodes.filter(n => n.type === 'company');
+                const companiesBySector = {};
+                companyNodes.forEach(c => { if (c.sector)(companiesBySector[c.sector] ||= []).push(c); });
+                const sectorCount = Math.max(1, sectorNodes.length);
+                const wedge = (Math.PI * 2) / sectorCount;
+                const usableWedge = wedge * 0.70;
+                let maxRingIndex = 0;
+                sectorNodes.forEach(sector => {
+                    const count = (companiesBySector[sector.id] || []).length;
+                    const capacity = Math.max(1, Math.floor((cfg.firstCompanyRadius * usableWedge) / cfg
+                    .companyMinGap));
+                    maxRingIndex = Math.max(maxRingIndex, Math.ceil(count / capacity) - 1);
+                });
+                const outerRadius = cfg.firstCompanyRadius + Math.max(0, maxRingIndex) * cfg.companyRingGap;
+                const width = Math.max(cfg.minStageWidth, Math.ceil((outerRadius + cfg.outerPadding) * 2));
+                const height = Math.max(cfg.minStageHeight, Math.ceil((outerRadius + cfg.outerPadding) * 2));
+                const centerX = width / 2,
+                    centerY = height / 2;
+                this.bounds = { width, height, centerX, centerY };
+                const rootNode = nodes.find(n => n.type === 'root');
+                if (rootNode) { rootNode.x = centerX;
+                    rootNode.y = centerY; }
+                sectorNodes.forEach((sector, index) => {
+                    const angle = (index / sectorCount) * Math.PI * 2 - Math.PI / 2;
+                    sector.x = centerX + Math.cos(angle) * cfg.sectorRadius;
+                    sector.y = centerY + Math.sin(angle) * cfg.sectorRadius;
+                    sector._angle = angle;
+                });
+                Object.keys(companiesBySector).forEach(sectorId => {
+                    const sector = sectorNodes.find(s => s.id === sectorId);
+                    const companies = companiesBySector[sectorId];
+                    if (!sector || companies.length === 0) return;
+                    let cursor = 0,
+                        ringIndex = 0;
+                    while (cursor < companies.length) {
+                        const radius = cfg.firstCompanyRadius + ringIndex * cfg.companyRingGap;
+                        const capacity = Math.max(1, Math.floor((radius * usableWedge) / cfg.companyMinGap));
+                        const ringNodes = companies.slice(cursor, cursor + capacity);
+                        ringNodes.forEach((company, idx) => {
+                            const ratio = ringNodes.length === 1 ? 0.5 : idx / (ringNodes.length - 1);
+                            const angle = sector._angle - usableWedge / 2 + ratio * usableWedge;
+                            company.x = centerX + Math.cos(angle) * radius;
+                            company.y = centerY + Math.sin(angle) * radius;
+                        });
+                        cursor += ringNodes.length;
+                        ringIndex++;
+                    }
+                });
+                this.resolveCollisions(nodes, width, height);
+                return nodes;
+            }
+            resolveCollisions(nodes, width, height) {
+                const movable = nodes.filter(n => n.type === 'company');
+                for (let pass = 0; pass < 40; pass++) {
+                    let moved = false;
+                    for (let i = 0; i < movable.length; i++) {
+                        for (let j = i + 1; j < movable.length; j++) {
+                            const a = movable[i],
+                                b = movable[j];
+                            let dx = b.x - a.x,
+                                dy = b.y - a.y,
+                                dist = Math.hypot(dx, dy);
+                            const minDist = a.sector === b.sector ? 120 : 108;
+                            if (dist >= minDist) continue;
+                            if (dist < 0.01) { dx = 1;
+                                dy = 0;
+                                dist = 1; }
+                            const push = (minDist - dist) / 2 + 0.5,
+                                ux = dx / dist,
+                                uy = dy / dist;
+                            a.x -= ux * push;
+                            a.y -= uy * push;
+                            b.x += ux * push;
+                            b.y += uy * push;
+                            moved = true;
+                        }
+                    }
+                    movable.forEach(n => {
+                        n.x = Math.max(60, Math.min(width - 60, n.x));
+                        n.y = Math.max(40, Math.min(height - 40, n.y));
+                    });
+                    if (!moved) break;
+                }
+            }
+        }
+
+        // ===== Excel解析器（简化） =====
+        class ExcelParser {
+            constructor() { this.workbook = null; }
+            async parse(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            this.workbook = XLSX.read(data, { type: 'array' });
+                            const nodes = this.parseNodesSheet();
+                            const sectors = this.parseSectorsSheet();
+                            const edges = this.parseEdgesSheet();
+                            resolve({ nodes, sectors, edges });
+                        } catch (err) { reject(err); }
+                    };
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+            parseNodesSheet() {
+                const sheet = this.getSheetByName(['节点总览', 'nodes', 'Sheet1']);
+                if (!sheet) return [];
+                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+                return rows.map((row) => {
+                    const type = this.getCellValue(row, ['节点类型', 'type']);
+                    return {
+                        id: String(this.getCellValue(row, ['节点ID', 'id', 'ID']) || '').trim(),
+                        type: this.normalizeType(type),
+                        name: String(this.getCellValue(row, ['节点名称', 'name', '名称']) || '').trim(),
+                        subtitle: String(this.getCellValue(row, ['副标题', 'subtitle']) || '').trim(),
+                        sector: String(this.getCellValue(row, ['所属板块', 'sector', '板块']) || '').trim(),
+                        icon: String(this.getCellValue(row, ['图标', 'icon']) || '').trim(),
+                        color: this.getCellValue(row, ['颜色值', '颜色', 'color']) || null,
+                        tags: this.parseTags(this.getCellValue(row, ['标签', 'tags'])),
+                        intro: String(this.getCellValue(row, ['企业概况', 'intro']) || '').trim(),
+                        business: String(this.getCellValue(row, ['业务介绍', 'business']) || '').trim(),
+                        culture: String(this.getCellValue(row, ['文化内涵', 'culture']) || '').trim(),
+                        bgImage: String(this.getCellValue(row, ['背景图', 'bgImage', '背景图路径']) || '').trim(),
+                        bgAudio: String(this.getCellValue(row, ['背景音', 'bgAudio', '背景音路径']) || '').trim(),
+                        audioPath: String(this.getCellValue(row, ['音频路径', '讲解音频', 'audioPath', 'audio']) || '')
+                        .trim(),
+                        graduateVideoPath: String(this.getCellValue(row, ['应届生视频路径', '视频路径', 'graduateVideoPath',
+                            'video'
+                        ]) || '').trim()
+                    };
+                }).filter(n => n.id && n.name);
+            }
+            parseSectorsSheet() {
+                const sheet = this.getSheetByName(['板块配置', 'sectors']);
+                if (!sheet) return [];
+                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+                return rows.map(row => ({
+                    id: String(this.getCellValue(row, ['板块ID', 'id', 'ID']) || '').trim(),
+                    name: String(this.getCellValue(row, ['板块名称', 'name', '名称']) || '').trim(),
+                    short: String(this.getCellValue(row, ['简称', 'short']) || '').trim(),
+                    color: String(this.getCellValue(row, ['颜色值(参考)', '颜色值', '颜色', 'color']) || '#4ad4e0').trim()
+                })).filter(s => s.id);
+            }
+            parseEdgesSheet() {
+                const sheet = this.getSheetByName(['连线关系', 'edges']);
+                if (!sheet) return [];
+                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+                return rows.map(row => ({
+                    from: String(this.getCellValue(row, ['起点ID', 'from', '起点']) || '').trim(),
+                    to: String(this.getCellValue(row, ['终点ID', 'to', '终点']) || '').trim(),
+                    main: this.isMainLine(this.getCellValue(row, ['是否主线', 'main', '主线']))
+                })).filter(e => e.from && e.to);
+            }
+            getCellValue(row, possibleKeys) {
+                for (const key of possibleKeys) {
+                    if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
+                }
+                const normalized = Object.keys(row).reduce((map, key) => {
+                    map[String(key).trim().replace(/\s+/g, '')] = row[key];
+                    return map;
+                }, {});
+                for (const key of possibleKeys) {
+                    const value = normalized[String(key).trim().replace(/\s+/g, '')];
+                    if (value !== undefined && value !== null && value !== '') return value;
+                }
+                return '';
+            }
+            isMainLine(value) {
+                if (typeof value === 'boolean') return value;
+                if (typeof value === 'number') return value === 1;
+                if (typeof value === 'string') {
+                    const v = value.trim();
+                    return v === '是' || v === 'true' || v === '1' || v === 'TRUE' || v === 'Yes' || v === 'yes';
+                }
+                return false;
+            }
+            getSheetByName(names) {
+                for (const name of names) {
+                    if (this.workbook.Sheets[name]) return this.workbook.Sheets[name];
+                }
+                return null;
+            }
+            normalizeType(type) {
+                type = String(type || '').trim();
+                const map = {
+                    '根节点': 'root',
+                    '根节点(集团)': 'root',
+                    'root': 'root',
+                    '板块节点': 'sector',
+                    '板块': 'sector',
+                    'sector': 'sector',
+                    '二级单位': 'company',
+                    '子公司': 'company',
+                    '公司节点': 'company',
+                    'company': 'company'
+                };
+                return map[type] || 'company';
+            }
+            parseTags(tagsStr) {
+                if (!tagsStr) return [];
+                if (Array.isArray(tagsStr)) return tagsStr;
+                return String(tagsStr).split(/[,，、\s]+/).filter(t => t.trim());
+            }
+        }
+
+        const COLOR_PALETTE = ['#FF6B6B', '#FECA57', '#48DBFB', '#FF9FF3', '#54A0FF', '#5F27CD', '#01A3A4', '#F368E0',
+            '#FF9F43', '#00D2D3', '#C44569', '#F8A5C2', '#74B9FF', '#55EFC4', '#FDCB6E', '#A29BFE', '#FD79A8', '#00CEC9',
+            '#E17055', '#6C5CE7'
+        ];
+        let colorIndex = 0;
+
+        function getNextColor() {
+            const color = COLOR_PALETTE[colorIndex % COLOR_PALETTE.length];
+            colorIndex++;
+            return color;
+        }
+
+        // ===== Vue应用 =====
+        createApp({
+            setup() {
+                const loading = ref(false);
+                const dataSource = ref('内置默认数据');
+                const keyword = ref('');
+                const filter = ref('all');
+                const activeTab = ref('overview');
+                const isSpeaking = ref(false);
+                const selectedNode = ref(null);
+                const humanVideoA = ref(null);
+                const humanVideoB = ref(null);
+                const activeHumanSlot = ref('a');
+                const humanState = ref('stand');
+                const videoLoaded = ref(false);
+                const videoError = ref(false);
+                const narrationAudio = ref(null);
+                const narrationSource = ref('');
+                const graduateVideo = ref(null);
+                const graduateVideoError = ref('');
+                const speechUtterance = ref(null);
+                const showFollowup = ref(false);
+                const showGraduateVideo = ref(false);
+                const graphContainer = ref(null);
+
+                const displayedText = ref('');
+                const typewriterTimer = ref(null);
+                const fullText = ref('');
+
+                const HUMAN_ACTIONS = {
+                    stand: './aihuman/Stand.webm',
+                    greeting: './aihuman/SayHi.webm',
+                    standToSpeak: './aihuman/StandToSpeak.webm',
+                    speaking: './aihuman/Speak.webm',
+                    speakToStand: './aihuman/SpeakToStand2x.webm'
+                };
+                const humanStateNames = {
+                    stand: '待机',
+                    greeting: '打招呼',
+                    standToSpeak: '准备讲解',
+                    speaking: '正在讲话',
+                    speakToStand: '结束讲解'
+                };
+                const humanStatusLabels = {
+                    stand: 'c宝萌星说',
+                    greeting: 'c宝萌星说',
+                    standToSpeak: 'c宝有话讲',
+                    speaking: 'c宝讲解员',
+                    speakToStand: 'c宝有话讲'
+                };
+
+                let humanActionToken = 0;
+                let pendingHumanResolve = null;
+                let narrationSession = 0;
+                const preloadedHumanVideos = [];
+
+                const currentBgImage = ref('');
+                const showBackgroundPanel = ref(false);
+                const backgroundImage = ref('');
+                const backgroundDim = ref(0.62);
+                const backgroundBlur = ref(0);
+                const defaultBackground =
+                    'radial-gradient(circle at 38% 42%, #18485b 0%, #0b2330 38%, #061018 78%)';
+                const backgroundPreset = ref(defaultBackground);
+                const backgroundPresets = [
+                    { id: 'tech', name: '科技深蓝', value: defaultBackground },
+                    { id: 'road', name: '交通蓝光', value: 'linear-gradient(135deg,#061018 10%,#123f55 48%,#0a1c28 100%)' },
+                    { id: 'green', name: '生态交通', value: 'radial-gradient(circle at 70% 25%,#235243 0%,#0b2526 42%,#061018 82%)' },
+                    { id: 'purple', name: '未来紫光', value: 'radial-gradient(circle at 28% 30%,#39295f 0%,#14233b 46%,#070f18 82%)' }
+                ];
+
+                const tabList = [
+                    { id: 'overview', name: '企业概况' },
+                    { id: 'business', name: '业务介绍' },
+                    { id: 'culture', name: '文化内涵' }
+                ];
+
+                const state = reactive({
+                    nodes: [],
+                    sectors: [],
+                    edges: [],
+                    layout: { width: CONFIG.layout.minStageWidth, height: CONFIG.layout.minStageHeight },
+                    expandedSector: null
+                });
+
+                const zoomScale = ref(1);
+                const zoomMin = 0.3;
+                const zoomMax = 2.5;
+                const panX = ref(0);
+                const panY = ref(0);
+                const isDragging = ref(false);
+                const dragStartX = ref(0);
+                const dragStartY = ref(0);
+                const dragStartPanX = ref(0);
+                const dragStartPanY = ref(0);
+                const stageWrapper = ref(null);
+                const isAnimating = ref(false);
+
+                const layoutEngine = new LayoutEngine(CONFIG);
+                const excelParser = new ExcelParser();
+
+                // ===== 计算属性 =====
+                const stageViewBox = computed(() => `0 0 ${state.layout.width} ${state.layout.height}`);
+                const stageDimensions = computed(() => ({
+                    width: state.layout.width + 'px',
+                    height: state.layout.height + 'px'
+                }));
+                const stageTransform = computed(() => ({
+                    transform: `translate(${panX.value}px, ${panY.value}px) scale(${zoomScale.value})`
+                }));
+
+                const activeContent = computed(() => {
+                    if (!selectedNode.value) return { kicker: '', title: '', content: '' };
+                    const node = selectedNode.value;
+                    if (activeTab.value === 'business') {
+                        return { kicker: 'CORE BUSINESS', title: `${node.name} · 业务介绍`, content: node.business ||
+                                `围绕${node.tags?.join('、') || ''}等方向开展专业化业务。` };
+                    }
+                    if (activeTab.value === 'culture') {
+                        return { kicker: 'CULTURE & PURPOSE', title: `${node.name} · 文化内涵`, content: node.culture ||
+                                '传承优秀企业文化。' };
+                    }
+                    return { kicker: 'COMPANY PROFILE', title: `${node.name} · 企业概况`, content: node.intro || '' };
+                });
+
+                const narrationText = computed(() => {
+                    if (!selectedNode.value) return '请点击图谱中的节点查看详细介绍。';
+                    return `您好，现在为您介绍${selectedNode.value.name}。${activeContent.value.content}`;
+                });
+
+                const graduateVideoSrc = computed(() => {
+                    return selectedNode.value ? resolveMediaPath(selectedNode.value.graduateVideoPath) : '';
+                });
+
+                const humanStateLabel = computed(() => humanStateNames[humanState.value] || '待机');
+                const humanStatusLabel = computed(() => {
+                    const label = humanStatusLabels[humanState.value] || 'c宝萌星说';
+                    return label;
+                });
+
+                const backgroundStyle = computed(() => ({
+                    '--user-bg': backgroundImage.value ? `url("${backgroundImage.value}")` : 'none',
+                    '--preset-bg': backgroundPreset.value,
+                    '--bg-dim': backgroundDim.value,
+                    '--bg-blur': backgroundBlur.value + 'px'
+                }));
+
+                const visibleNodes = computed(() => {
+                    const all = state.nodes;
+                    const expanded = state.expandedSector;
+                    return all.filter(n => {
+                        if (n.type === 'root') return true;
+                        if (n.type === 'sector') return true;
+                        if (n.type === 'company') {
+                            return n.sector === expanded;
+                        }
+                        return false;
+                    });
+                });
+
+                const isCompanyVisible = (node) => {
+                    if (node.type !== 'company') return true;
+                    return node.sector === state.expandedSector;
+                };
+
+                const isNodeDimmed = (node) => {
+                    if (filter.value === 'all') return false;
+                    if (node.id === 'root') return false;
+                    if (node.type === 'sector') return node.id !== filter.value;
+                    if (node.type === 'company') return node.sector !== filter.value;
+                    return false;
+                };
+
+                // ===== 连线路径 =====
+                function getEdgePath(edge) {
+                    const fromNode = getNodeById(edge.from);
+                    const toNode = getNodeById(edge.to);
+                    if (!fromNode || !toNode) return '';
+                    const x1 = fromNode.x || 0,
+                        y1 = fromNode.y || 0;
+                    const x2 = toNode.x || 0,
+                        y2 = toNode.y || 0;
+                    if (edge.main) {
+                        return `M ${x1} ${y1} L ${x2} ${y2}`;
+                    }
+                    const mx = (x1 + x2) / 2,
+                        my = (y1 + y2) / 2;
+                    const dx = x2 - x1,
+                        dy = y2 - y1;
+                    const len = Math.hypot(dx, dy);
+                    if (len < 1) return `M ${x1} ${y1} L ${x2} ${y2}`;
+                    let nx = -dy / len,
+                        ny = dx / len;
+                    const seed = (edge.from + edge.to).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+                    const dir = (seed % 2 === 0) ? 1 : -1;
+                    const offset = Math.min(len * 0.20, 110) * dir;
+                    const cx = mx + nx * offset;
+                    const cy = my + ny * offset;
+                    return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+                }
+
+                // ===== 缩放与拖拽 =====
+                function zoomIn() { zoomScale.value = Math.min(zoomScale.value + 0.15, zoomMax); }
+
+                function zoomOut() { zoomScale.value = Math.max(zoomScale.value - 0.15, zoomMin); }
+
+                function resetZoom(animate = true) {
+                    const el = stageWrapper.value;
+                    if (!el) return;
+                    const scale = Math.min(
+                        (el.clientWidth - 30) / state.layout.width,
+                        (el.clientHeight - 30) / state.layout.height,
+                        1
+                    );
+                    const targetScale = Math.max(zoomMin, Math.min(zoomMax, scale));
+                    const targetPanX = (el.clientWidth - state.layout.width * targetScale) / 2;
+                    const targetPanY = (el.clientHeight - state.layout.height * targetScale) / 2;
+                    if (animate) {
+                        animatePanZoom(targetPanX, targetPanY, targetScale, 500);
+                    } else {
+                        zoomScale.value = targetScale;
+                        panX.value = targetPanX;
+                        panY.value = targetPanY;
+                    }
+                }
+
+                function animatePanZoom(targetX, targetY, targetScale, duration = 500) {
+                    if (isAnimating.value) return;
+                    isAnimating.value = true;
+                    const startX = panX.value,
+                        startY = panY.value,
+                        startScale = zoomScale.value;
+                    const startTime = performance.now();
+
+                    function step(time) {
+                        const t = Math.min((time - startTime) / duration, 1);
+                        const ease = 1 - Math.pow(1 - t, 3);
+                        panX.value = startX + (targetX - startX) * ease;
+                        panY.value = startY + (targetY - startY) * ease;
+                        zoomScale.value = startScale + (targetScale - startScale) * ease;
+                        if (t < 1) {
+                            requestAnimationFrame(step);
+                        } else {
+                            panX.value = targetX;
+                            panY.value = targetY;
+                            zoomScale.value = targetScale;
+                            isAnimating.value = false;
+                        }
+                    }
+                    requestAnimationFrame(step);
+                }
+
+                function focusOnNode(node, duration = 600) {
+                    if (!node || !stageWrapper.value) return;
+                    const el = stageWrapper.value;
+                    const containerW = el.clientWidth,
+                        containerH = el.clientHeight;
+                    const nodeX = node.x || 0,
+                        nodeY = node.y || 0;
+                    const targetScale = Math.min(
+                        (containerW - 80) / 380,
+                        (containerH - 80) / 380,
+                        1.2
+                    );
+                    const targetScaleClamped = Math.max(zoomMin, Math.min(zoomMax, targetScale));
+                    const targetPanX = containerW / 2 - nodeX * targetScaleClamped;
+                    const targetPanY = containerH / 2 - nodeY * targetScaleClamped;
+                    animatePanZoom(targetPanX, targetPanY, targetScaleClamped, duration);
+                }
+
+                function focusOnRoot() {
+                    const root = state.nodes.find(n => n.type === 'root');
+                    if (root) {
+                        focusOnNode(root, 600);
+                        if (selectedNode.value?.id !== root.id) {
+                            selectedNode.value = root;
+                            switchBackground(root);
+                            state.expandedSector = null;
+                            filter.value = 'all';
+                            activeTab.value = 'overview';
+                        }
+                    }
+                }
+
+                function resetView() {
+                    resetZoom(true);
+                }
+
+                function onWheel(event) {
+                    event.preventDefault();
+                    const el = stageWrapper.value;
+                    if (!el) return;
+                    const rect = el.getBoundingClientRect();
+                    const mx = event.clientX - rect.left;
+                    const my = event.clientY - rect.top;
+                    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+                    const oldScale = zoomScale.value;
+                    const newScale = Math.min(Math.max(oldScale + delta, zoomMin), zoomMax);
+                    if (newScale === oldScale) return;
+                    const wx = (mx - panX.value) / oldScale;
+                    const wy = (my - panY.value) / oldScale;
+                    zoomScale.value = newScale;
+                    panX.value = mx - wx * newScale;
+                    panY.value = my - wy * newScale;
+                }
+
+                function onDragStart(event) {
+                    if (event.button !== 0) return;
+                    const target = event.target.closest('.node, .graph-tools, .zoom-controls');
+                    if (target) return;
+                    isDragging.value = true;
+                    dragStartX.value = event.clientX;
+                    dragStartY.value = event.clientY;
+                    dragStartPanX.value = panX.value;
+                    dragStartPanY.value = panY.value;
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'grabbing';
+                }
+
+                function onDragMove(event) {
+                    if (!isDragging.value) return;
+                    const dx = event.clientX - dragStartX.value;
+                    const dy = event.clientY - dragStartY.value;
+                    panX.value = dragStartPanX.value + dx;
+                    panY.value = dragStartPanY.value + dy;
+                }
+
+                function onDragEnd() {
+                    isDragging.value = false;
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                }
+
+                // ===== 节点选择 =====
+                function handleSelectNode(node) {
+                    stopNarration(false);
+                    selectedNode.value = node;
+                    activeTab.value = 'overview';
+                    keyword.value = '';
+                    switchBackground(node);
+
+                    if (node.type === 'sector') {
+                        state.expandedSector = node.id;
+                        filter.value = node.id;
+                        nextTick(() => {
+                            focusOnNode(node, 550);
+                        });
+                    } else if (node.type === 'company') {
+                        nextTick(() => {
+                            focusOnNode(node, 550);
+                        });
+                    } else if (node.type === 'root') {
+                        state.expandedSector = null;
+                        filter.value = 'all';
+                        nextTick(() => {
+                            focusOnNode(node, 550);
+                        });
+                    }
+
+                    if (node.type === 'sector' || node.type === 'company') {
+                        nextTick(() => playGreeting());
+                    }
+                }
+
+                function handleFocus(sectorId) {
+                    stopNarration(false);
+                    filter.value = sectorId;
+                    if (sectorId === 'all') {
+                        const root = state.nodes.find(n => n.type === 'root');
+                        selectedNode.value = root;
+                        switchBackground(root);
+                        state.expandedSector = null;
+                        nextTick(() => {
+                            if (root) focusOnNode(root, 500);
+                        });
+                    } else {
+                        const node = state.nodes.find(n => n.id === sectorId);
+                        if (node) {
+                            selectedNode.value = node;
+                            switchBackground(node);
+                            state.expandedSector = sectorId;
+                            nextTick(() => {
+                                focusOnNode(node, 500);
+                            });
+                        }
+                    }
+                    keyword.value = '';
+                }
+
+                // ===== 搜索 =====
+                function handleSearch() {
+                    const query = keyword.value.trim();
+                    if (!query) {
+                        alert('请输入单位名称关键词。');
+                        return;
+                    }
+                    const lowerQuery = query.toLowerCase();
+                    const matches = state.nodes.filter(n =>
+                        String(n.name || '').toLowerCase().includes(lowerQuery)
+                    );
+                    if (matches.length === 0) {
+                        alert(`未找到包含“${query}”的单位。`);
+                        return;
+                    }
+                    let target;
+                    if (matches.length === 1) {
+                        target = matches[0];
+                    } else {
+                        const randomIndex = Math.floor(Math.random() * matches.length);
+                        target = matches[randomIndex];
+                    }
+                    handleSelectNode(target);
+                }
+
+                // ===== 关闭节点信息 =====
+                function closeNodeInfo() {
+                    selectedNode.value = null;
+                    state.expandedSector = null;
+                    filter.value = 'all';
+                    // 恢复背景为默认
+                    currentBgImage.value = '';
+                    // 停止任何正在播放的语音
+                    stopNarration(false);
+                }
+
+                // ===== 点击图谱背景取消选中 =====
+                function handleGraphClick(event) {
+                    // 如果点击的是节点，由节点自己的 @click.stop 处理，不会触发此事件
+                    // 如果点击的是背景，取消选中
+                    if (!event.target.closest('.node')) {
+                        closeNodeInfo();
+                    }
+                }
+
+                // ===== 背景 =====
+                function switchBackground(node) {
+                    if (node && node.bgImage) {
+                        currentBgImage.value = node.bgImage;
+                    } else {
+                        currentBgImage.value = '';
+                    }
+                }
+
+                function chooseBackgroundPreset(value) {
+                    backgroundImage.value = '';
+                    backgroundPreset.value = value;
+                }
+
+                function handleBackgroundUpload(event) {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    if (!/^image\/(png|jpeg|webp)$/i.test(file.type)) {
+                        alert('请选择 JPG、PNG 或 WebP 图片。');
+                        event.target.value = '';
+                        return;
+                    }
+                    if (file.size > 12 * 1024 * 1024) {
+                        alert('背景图请控制在 12MB 以内。');
+                        event.target.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        backgroundImage.value = String(reader.result);
+                        backgroundBlur.value = 0;
+                    };
+                    reader.readAsDataURL(file);
+                    event.target.value = '';
+                }
+
+                function resetBackground() {
+                    backgroundImage.value = '';
+                    backgroundPreset.value = defaultBackground;
+                    backgroundDim.value = 0.62;
+                    backgroundBlur.value = 0;
+                }
+
+                // ===== 数字人 =====
+                function onHumanVideoReady() { videoLoaded.value = true;
+                    videoError.value = false; }
+
+                function onHumanVideoError(event) {
+                    console.error('数字人动作视频加载失败：', event?.target?.currentSrc || '');
+                    videoError.value = true;
+                }
+
+                function preloadHumanActions() {
+                    Object.values(HUMAN_ACTIONS).forEach(src => {
+                        const video = document.createElement('video');
+                        video.preload = 'auto';
+                        video.muted = true;
+                        video.playsInline = true;
+                        video.src = src;
+                        video.load();
+                        preloadedHumanVideos.push(video);
+                    });
+                }
+
+                function waitForVideoReady(video, token) {
+                    if (video.readyState >= 3) return Promise.resolve(true);
+                    return new Promise(resolve => {
+                        let settled = false;
+                        const finish = value => {
+                            if (settled) return;
+                            settled = true;
+                            video.removeEventListener('canplay', ready);
+                            video.removeEventListener('error', failed);
+                            clearTimeout(timeout);
+                            resolve(value && token === humanActionToken);
+                        };
+                        const ready = () => finish(true);
+                        const failed = () => finish(false);
+                        const timeout = setTimeout(() => finish(video.readyState >= 2), 4500);
+                        video.addEventListener('canplay', ready, { once: true });
+                        video.addEventListener('error', failed, { once: true });
+                    });
+                }
+
+                async function playHumanAction(action, options = {}) {
+                    const src = HUMAN_ACTIONS[action];
+                    if (!src || videoError.value) return false;
+                    if (pendingHumanResolve) { pendingHumanResolve(false);
+                        pendingHumanResolve = null; }
+                    const token = ++humanActionToken;
+                    const nextSlot = activeHumanSlot.value === 'a' ? 'b' : 'a';
+                    const target = nextSlot === 'a' ? humanVideoA.value : humanVideoB.value;
+                    const previous = activeHumanSlot.value === 'a' ? humanVideoA.value : humanVideoB.value;
+                    if (!target) return false;
+                    target.onended = null;
+                    target.loop = !!options.loop;
+                    target.muted = true;
+                    target.src = src;
+                    target.currentTime = 0;
+                    target.load();
+                    const ready = await waitForVideoReady(target, token);
+                    if (!ready || token !== humanActionToken) return false;
+                    try { await target.play(); } catch (error) { console.error('数字人动作无法播放：', action, error); return false; }
+                    humanState.value = action;
+                    activeHumanSlot.value = nextSlot;
+                    setTimeout(() => { if (previous && previous !== target) previous.pause(); }, 220);
+                    if (options.loop || !options.waitForEnd) return true;
+                    return new Promise(resolve => {
+                        let done = false;
+                        const finish = value => {
+                            if (done) return;
+                            done = true;
+                            clearTimeout(timeout);
+                            if (pendingHumanResolve === finish) pendingHumanResolve = null;
+                            resolve(value && token === humanActionToken);
+                        };
+                        pendingHumanResolve = finish;
+                        target.onended = () => finish(true);
+                        const maxWait = Number.isFinite(target.duration) ? Math.max(3000, target.duration * 1000 +
+                            1200) : 12000;
+                        const timeout = setTimeout(() => finish(true), maxWait);
+                    });
+                }
+
+                async function playGreeting() {
+                    if (isSpeaking.value || videoError.value) return;
+                    const completed = await playHumanAction('greeting', { waitForEnd: true });
+                    if (completed && !isSpeaking.value) await playHumanAction('stand', { loop: true });
+                }
+
+                async function enterSpeakingState(session) {
+                    if (videoError.value) return true;
+                    if (humanState.value !== 'speaking') {
+                        const completed = await playHumanAction('standToSpeak', { waitForEnd: true });
+                        if (!completed || session !== narrationSession) return false;
+                        await playHumanAction('speaking', { loop: true });
+                    }
+                    return session === narrationSession;
+                }
+
+                async function returnToStand() {
+                    if (videoError.value || humanState.value === 'stand') return;
+                    if (humanState.value === 'speaking' || humanState.value === 'standToSpeak') {
+                        const completed = await playHumanAction('speakToStand', { waitForEnd: true });
+                        if (!completed) return;
+                    }
+                    await playHumanAction('stand', { loop: true });
+                }
+
+                // ===== 语音与字幕 =====
+                function resolveMediaPath(path) {
+                    const value = String(path || '').trim().replace(/^["']+|["']+$/g, '').trim();
+                    if (!value) return '';
+                    if (/^(https?:|blob:|data:)/i.test(value)) return value;
+                    const normalized = value.replaceAll('\\', '/');
+                    if (/^[a-z]:\//i.test(normalized)) {
+                        const projectMarker = '/CICORE_KG-main/';
+                        const markerIndex = normalized.toLowerCase().lastIndexOf(projectMarker.toLowerCase());
+                        if (markerIndex >= 0) return './' + normalized.slice(markerIndex + projectMarker.length);
+                        return './' + normalized.split('/').pop();
+                    }
+                    return normalized.startsWith('./') || normalized.startsWith('../') || normalized.startsWith('/') ?
+                        normalized : './' + normalized;
+                }
+
+                function startTypewriter(text, callback) {
+                    stopTypewriter();
+                    fullText.value = text;
+                    displayedText.value = '';
+                    let index = 0;
+                    const speed = 42;
+
+                    function type() {
+                        if (index < fullText.value.length) {
+                            const char = fullText.value.charAt(index);
+                            if (char === '。' || char === '，' || char === '！' || char === '？') {
+                                displayedText.value += char;
+                                index++;
+                                typewriterTimer.value = setTimeout(type, speed * 1.8);
+                            } else {
+                                displayedText.value += char;
+                                index++;
+                                typewriterTimer.value = setTimeout(type, speed);
+                            }
+                        } else {
+                            if (callback) callback();
+                        }
+                    }
+                    type();
+                }
+
+                function stopTypewriter() {
+                    if (typewriterTimer.value) {
+                        clearTimeout(typewriterTimer.value);
+                        typewriterTimer.value = null;
+                    }
+                }
+
+                const displayedTextWithCursor = computed(() => {
+                    const text = displayedText.value || '';
+                    const isComplete = text.length >= (fullText.value || '').length;
+                    const cursor = isComplete ? '' : '<span class="cursor-blink"></span>';
+                    return text + cursor;
+                });
+
+                function onNarrationStart() {
+                    isSpeaking.value = true;
+                    showFollowup.value = false;
+                    const text = narrationText.value;
+                    startTypewriter(text, () => {});
+                }
+
+                function onNarrationPause() {
+                    isSpeaking.value = false;
+                    stopTypewriter();
+                }
+
+                function onNarrationEnd() {
+                    narrationSession++;
+                    isSpeaking.value = false;
+                    showFollowup.value = true;
+                    returnToStand();
+                    setTimeout(() => {
+                        resetView();
+                    }, 2000);
+                }
+
+                function speakWithBrowser() {
+                    if (!('speechSynthesis' in window)) {
+                        alert('当前浏览器不支持语音合成。');
+                        return;
+                    }
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(narrationText.value);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.95;
+                    utterance.pitch = 1;
+                    const voices = window.speechSynthesis.getVoices();
+                    const chineseVoice = voices.find(v => /zh-CN/i.test(v.lang)) || voices.find(v => /^zh/i.test(v.lang));
+                    if (chineseVoice) utterance.voice = chineseVoice;
+                    utterance.onstart = onNarrationStart;
+                    utterance.onend = onNarrationEnd;
+                    utterance.onerror = event => {
+                        if (event.error !== 'canceled' && event.error !== 'interrupted') {
+                            console.error('浏览器语音合成失败：', event.error);
+                        }
+                        isSpeaking.value = false;
+                        if (!showFollowup.value) {
+                            showFollowup.value = true;
+                        }
+                    };
+                    speechUtterance.value = utterance;
+                    narrationSource.value = '浏览器语音';
+                    window.speechSynthesis.speak(utterance);
+                }
+
+                function getNarrationAudioCandidates() {
+                    const node = selectedNode.value;
+                    if (!node) return [];
+                    const indexMap = { overview: 1, business: 2, culture: 3 };
+                    const index = indexMap[activeTab.value] || 1;
+                    const candidates = [
+                        `./audio/${node.id}_${index}.mp3`,
+                        `./audio/${node.name}_${index}.mp3`
+                    ];
+                    if (node.audioPath) candidates.push(resolveMediaPath(node.audioPath));
+                    return [...new Set(candidates.filter(Boolean))];
+                }
+
+                function loadAudioCandidate(audio, src, session) {
+                    return new Promise(resolve => {
+                        let settled = false;
+                        const finish = value => {
+                            if (settled) return;
+                            settled = true;
+                            clearTimeout(timeout);
+                            audio.removeEventListener('canplay', ready);
+                            audio.removeEventListener('error', failed);
+                            resolve(value && session === narrationSession);
+                        };
+                        const ready = () => finish(true);
+                        const failed = () => finish(false);
+                        const timeout = setTimeout(() => finish(audio.readyState >= 2), 3200);
+                        audio.addEventListener('canplay', ready, { once: true });
+                        audio.addEventListener('error', failed, { once: true });
+                        audio.src = resolveMediaPath(src);
+                        audio.load();
+                    });
+                }
+
+                async function tryPlayRecordedAudio(session) {
+                    const audio = narrationAudio.value;
+                    if (!audio) return false;
+                    const candidates = getNarrationAudioCandidates();
+                    for (const candidate of candidates) {
+                        if (session !== narrationSession) return false;
+                        const ready = await loadAudioCandidate(audio, candidate, session);
+                        if (!ready) continue;
+                        try {
+                            await audio.play();
+                            narrationSource.value = '录制音频';
+                            return true;
+                        } catch (error) {
+                            console.warn('音频无法播放：', candidate, error);
+                        }
+                    }
+                    return false;
+                }
+
+                async function playNarration() {
+                    stopNarration(false);
+                    const session = ++narrationSession;
+                    showFollowup.value = false;
+                    displayedText.value = '';
+                    fullText.value = '';
+
+                    const actionPromise = enterSpeakingState(session);
+
+                    const audioPlayed = await tryPlayRecordedAudio(session);
+                    if (audioPlayed || session !== narrationSession) {
+                        if (!audioPlayed && session === narrationSession) {
+                            speakWithBrowser();
+                        }
+                    } else {
+                        speakWithBrowser();
+                    }
+
+                    actionPromise.catch(() => {});
+                }
+
+                function stopNarration(animate = true) {
+                    narrationSession++;
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    if (narrationAudio.value) {
+                        narrationAudio.value.pause();
+                        try { narrationAudio.value.currentTime = 0; } catch {}
+                    }
+                    speechUtterance.value = null;
+                    narrationSource.value = '';
+                    isSpeaking.value = false;
+                    showFollowup.value = false;
+                    stopTypewriter();
+                    if (animate) returnToStand();
+                }
+
+                function continueIntroduction(tabId) {
+                    activeTab.value = tabId;
+                    showFollowup.value = false;
+                    displayedText.value = '';
+                    fullText.value = '';
+                    nextTick(() => playNarration());
+                }
+
+                function openGraduateVideo() {
+                    if (!selectedNode.value?.graduateVideoPath) return;
+                    graduateVideoError.value = '';
+                    showGraduateVideo.value = true;
+                    showFollowup.value = false;
+                    nextTick(() => {
+                        const video = graduateVideo.value;
+                        if (!video) return;
+                        video.load();
+                        video.play().catch(() => {});
+                    });
+                }
+
+                function onGraduateVideoError() {
+                    const source = graduateVideoSrc.value || '未配置路径';
+                    graduateVideoError.value = `视频加载失败：${source}。请确认文件路径。`;
+                    console.error('应届生视频加载失败：', source);
+                }
+
+                function closeGraduateVideo() {
+                    if (graduateVideo.value) graduateVideo.value.pause();
+                    showGraduateVideo.value = false;
+                    graduateVideoError.value = '';
+                }
+
+                // ===== 核心初始化 =====
+                function initializeData(data = DEFAULT_DATA) {
+                    loading.value = true;
+                    console.log('🚀 初始化图谱...');
+
+                    let sectors = JSON.parse(JSON.stringify(data.sectors));
+                    let edges = JSON.parse(JSON.stringify(data.edges));
+                    let nodes = JSON.parse(JSON.stringify(data.nodes));
+
+                    const sectorColorMap = {};
+                    sectors.forEach(s => { sectorColorMap[s.id] = s.color; });
+
+                    nodes.forEach(node => {
+                        if (node.type === 'root') {
+                            node.color = CONFIG.colors.root;
+                        } else if (node.type === 'sector') {
+                            node.color = sectorColorMap[node.id] || getNextColor();
+                            const sec = sectors.find(s => s.id === node.id);
+                            if (sec) sec.color = node.color;
+                        } else if (node.type === 'company') {
+                            node.color = (node.sector && sectorColorMap[node.sector]) || getNextColor();
+                        }
+                    });
+
+                    sectors.forEach(s => { sectorsDataMap[s.id] = s;
+                        sectorsDataMap[s.name] = s; });
+
+                    const rootNode = nodes.find(n => n.type === 'root');
+                    if (rootNode) {
+                        const sectorNodes = nodes.filter(n => n.type === 'sector');
+                        sectorNodes.forEach(sector => {
+                            const exists = edges.some(e => e.from === rootNode.id && e.to === sector.id);
+                            if (!exists) edges.push({ from: rootNode.id, to: sector.id, main: true });
+                            else { const edge = edges.find(e => e.from === rootNode.id && e.to === sector.id); if (
+                                    edge) edge.main = true; }
+                        });
+                    }
+
+                    const uniqueEdges = [];
+                    const seen = new Set();
+                    edges.forEach(e => {
+                        const key = e.from + '-' + e.to;
+                        if (!seen.has(key)) { seen.add(key);
+                            uniqueEdges.push(e); }
+                    });
+
+                    state.sectors = sectors;
+                    state.edges = uniqueEdges;
+                    state.nodes = nodes;
+                    state.expandedSector = null;
+
+                    setTimeout(() => {
+                        layoutEngine.calculate(nodes, uniqueEdges);
+                        state.layout.width = layoutEngine.bounds.width;
+                        state.layout.height = layoutEngine.bounds.height;
+                        // 初始化时不选中任何节点，显示总部仪表板
+                        selectedNode.value = null;
+                        switchBackground(null);
+                        nextTick(() => {
+                            requestAnimationFrame(() => {
+                                resetZoom(false);
+                                setTimeout(() => {
+                                    // 聚焦根节点位置，但不选中
+                                    const root = nodes.find(n => n.type === 'root') || nodes[0];
+                                    if (root) focusOnNode(root, 700);
+                                }, 300);
+                            });
+                        });
+                        loading.value = false;
+                        console.log('✅ 初始化完成，节点数:', nodes.length, '连线数:', uniqueEdges.length);
+                    }, 300);
+                }
+
+                function validateGraphData(nodes, sectors, edges) {
+                    const errors = [];
+                    const warnings = [];
+                    const idSet = new Set();
+                    const duplicates = new Set();
+                    nodes.forEach(node => {
+                        node.id = String(node.id || '').trim();
+                        node.name = String(node.name || '').trim();
+                        node.type = ['root', 'sector', 'company'].includes(node.type) ? node.type : 'company';
+                        if (idSet.has(node.id)) duplicates.add(node.id);
+                        idSet.add(node.id);
+                    });
+                    if (duplicates.size) errors.push('节点ID重复：' + [...duplicates].join('、'));
+                    if (!nodes.some(n => n.type === 'root')) errors.push('缺少根节点');
+
+                    const sectorById = new Map(sectors.map(s => [String(s.id).trim(), s]));
+                    const sectorByName = new Map(sectors.map(s => [String(s.name).trim(), s]));
+                    nodes.filter(n => n.type === 'sector').forEach(node => {
+                        if (!sectorById.has(node.id)) {
+                            const generated = { id: node.id, name: node.name, short: node.name.slice(0, 4),
+                                color: node.color || getNextColor() };
+                            sectors.push(generated);
+                            sectorById.set(generated.id, generated);
+                            sectorByName.set(generated.name, generated);
+                            warnings.push('已从节点总览补建板块配置：' + node.name);
+                        }
+                    });
+                    nodes.filter(n => n.type === 'company').forEach(node => {
+                        const raw = String(node.sector || '').trim();
+                        if (sectorByName.has(raw)) node.sector = sectorByName.get(raw).id;
+                        if (!sectorById.has(node.sector)) {
+                            errors.push(`二级单位"${node.name}"引用了不存在的板块：${raw || '空'}`);
+                        }
+                    });
+
+                    const validEdges = [];
+                    edges.forEach(edge => {
+                        edge.from = String(edge.from || '').trim();
+                        edge.to = String(edge.to || '').trim();
+                        if (!idSet.has(edge.from) || !idSet.has(edge.to)) {
+                            warnings.push(`已忽略无效连线：${edge.from} → ${edge.to}`);
+                            return;
+                        }
+                        if (edge.from === edge.to) { warnings.push('已忽略自连接：' + edge.from); return; }
+                        validEdges.push(edge);
+                    });
+                    if (errors.length) throw new Error(errors.join('\n'));
+                    return { edges: validEdges, warnings };
+                }
+
+                async function handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    const silent = Boolean(event.silent);
+                    if (!file) return;
+                    if (!/\.(xlsx|xls)$/i.test(file.name)) {
+                        alert('请选择 .xlsx 或 .xls 文件。');
+                        event.target.value = '';
+                        return;
+                    }
+                    if (file.size > 15 * 1024 * 1024) {
+                        alert('Excel 文件过大，请控制在 15MB 以内。');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    loading.value = true;
+                    dataSource.value = file.name;
+
+                    try {
+                        const parsed = await excelParser.parse(file);
+
+                        let finalSectors = parsed.sectors && parsed.sectors.length > 0 ? parsed.sectors : JSON.parse(
+                            JSON.stringify(state.sectors));
+                        let finalNodes = parsed.nodes && parsed.nodes.length > 0 ? parsed.nodes : JSON.parse(JSON
+                            .stringify(state.nodes));
+                        let finalEdges = parsed.edges && parsed.edges.length > 0 ? parsed.edges : JSON.parse(JSON
+                            .stringify(state.edges));
+
+                        const validation = validateGraphData(finalNodes, finalSectors, finalEdges);
+                        finalEdges = validation.edges;
+
+                        const sectorColorMap = {};
+                        finalSectors.forEach(s => { sectorColorMap[s.id] = s.color; });
+
+                        finalNodes.forEach(node => {
+                            if (node.type === 'root') node.color = CONFIG.colors.root;
+                            else if (node.type === 'sector') {
+                                node.color = sectorColorMap[node.id] || getNextColor();
+                                const sec = finalSectors.find(s => s.id === node.id);
+                                if (sec) sec.color = node.color;
+                            } else if (node.type === 'company') {
+                                node.color = (node.sector && sectorColorMap[node.sector]) || getNextColor();
+                            }
+                        });
+
+                        const rootNode = finalNodes.find(n => n.type === 'root');
+                        if (rootNode) {
+                            const sectorNodes = finalNodes.filter(n => n.type === 'sector');
+                            sectorNodes.forEach(sector => {
+                                const exists = finalEdges.some(e => e.from === rootNode.id && e.to === sector
+                                .id);
+                                if (!exists) finalEdges.push({ from: rootNode.id, to: sector.id,
+                                    main: true });
+                                else { const edge = finalEdges.find(e => e.from === rootNode.id && e.to ===
+                                        sector.id); if (edge) edge.main = true; }
+                            });
+                        }
+
+                        const uniqueEdges = [];
+                        const seen = new Set();
+                        finalEdges.forEach(e => {
+                            const key = e.from + '-' + e.to;
+                            if (!seen.has(key)) { seen.add(key);
+                                uniqueEdges.push(e); }
+                        });
+
+                        state.sectors = finalSectors;
+                        state.edges = uniqueEdges;
+                        state.nodes = finalNodes;
+                        state.expandedSector = null;
+
+                        finalSectors.forEach(s => { sectorsDataMap[s.id] = s;
+                            sectorsDataMap[s.name] = s; });
+
+                        setTimeout(() => {
+                            layoutEngine.calculate(finalNodes, uniqueEdges);
+                            state.layout.width = layoutEngine.bounds.width;
+                            state.layout.height = layoutEngine.bounds.height;
+
+                            // 导入完成后不选中任何节点，显示总部仪表板
+                            selectedNode.value = null;
+                            switchBackground(null);
+                            nextTick(() => {
+                                requestAnimationFrame(() => {
+                                    resetZoom(false);
+                                    setTimeout(() => {
+                                        const root = finalNodes.find(n => n.type === 'root') ||
+                                            finalNodes[0];
+                                        if (root) focusOnNode(root, 600);
+                                    }, 350);
+                                });
+                            });
+                            loading.value = false;
+                            console.log('✅ 导入完成，节点数:', finalNodes.length, '连线数:', uniqueEdges.length);
+                            if (validation.warnings.length) console.warn('导入警告：', validation.warnings);
+                            if (!silent) {
+                                alert(
+                                    `导入成功：${finalNodes.length} 个节点，${uniqueEdges.length} 条连线${validation.warnings.length ? '，另有 ' + validation.warnings.length + ' 条警告（详见控制台）' : ''}。`
+                                    );
+                            }
+                        }, 300);
+                        event.target.value = '';
+                        return true;
+
+                    } catch (err) {
+                        console.error('❌ 导入失败:', err);
+                        if (!silent) alert('导入失败，请检查文件格式。错误: ' + err.message);
+                        loading.value = false;
+                        event.target.value = '';
+                        return false;
+                    }
+                }
+
+                async function loadDefaultDatabase() {
+                    if (window.location.protocol === 'file:') {
+                        console.info('本地文件模式；可使用“导入Excel”加载 database.xlsx。');
+                        initializeData();
+                        return;
+                    }
+                    try {
+                        const response = await fetch('./database.xlsx', { cache: 'no-store' });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const blob = await response.blob();
+                        const file = new File([blob], 'database.xlsx', {
+                            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                        });
+                        const loaded = await handleFileUpload({
+                            silent: true,
+                            target: { files: [file], value: '' }
+                        });
+                        if (!loaded) initializeData();
+                    } catch (error) {
+                        console.warn('自动加载 database.xlsx 失败，使用内置数据：', error);
+                        initializeData();
+                    }
+                }
+
+                function getNodeById(id) {
+                    return state.nodes.find(n => n.id === id) || { x: 0, y: 0, color: '#4ad4e0' };
+                }
+
+                function isEdgeActive(edge) {
+                    if (!selectedNode.value) return false;
+                    return edge.from === selectedNode.value.id || edge.to === selectedNode.value.id;
+                }
+
+                function isEdgeDimmed(edge) {
+                    if (filter.value === 'all') return false;
+                    if (edge.from === filter.value || edge.to === filter.value) return false;
+                    if (edge.from === 'root' && state.sectors.some(s => s.id === edge.to)) return false;
+                    return true;
+                }
+
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.getVoices();
+                    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+                }
+
+                onMounted(() => {
+                    loadDefaultDatabase();
+                    preloadHumanActions();
+                    nextTick(() => {
+                        const standVideo = humanVideoA.value;
+                        if (standVideo) {
+                            standVideo.loop = true;
+                            standVideo.play().catch(() => {});
+                        }
+                        setTimeout(playGreeting, 650);
+                    });
+                });
+
+                onBeforeUnmount(() => {
+                    humanActionToken++;
+                    if (pendingHumanResolve) pendingHumanResolve(false);
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    stopTypewriter();
+                    [humanVideoA.value, humanVideoB.value, ...preloadedHumanVideos].forEach(video => {
+                        if (!video) return;
+                        video.pause();
+                        video.removeAttribute('src');
+                        video.load();
+                    });
+                });
+
+                watch(selectedNode, (newVal, oldVal) => {
+                    if (newVal && newVal.id !== oldVal?.id) {
+                        stopTypewriter();
+                        displayedText.value = '';
+                        fullText.value = '';
+                        showFollowup.value = false;
+                    }
+                });
+
+                return {
+                    loading,
+                    dataSource,
+                    keyword,
+                    filter,
+                    activeTab,
+                    isSpeaking,
+                    humanVideoA,
+                    humanVideoB,
+                    activeHumanSlot,
+                    humanState,
+                    humanStateLabel,
+                    humanStatusLabel,
+                    videoLoaded,
+                    videoError,
+                    narrationAudio,
+                    narrationSource,
+                    graduateVideo,
+                    graduateVideoSrc,
+                    graduateVideoError,
+                    showFollowup,
+                    showGraduateVideo,
+                    showBackgroundPanel,
+                    backgroundImage,
+                    backgroundDim,
+                    backgroundBlur,
+                    backgroundPreset,
+                    backgroundPresets,
+                    backgroundStyle,
+                    selectedNode,
+                    tabList,
+                    graphContainer,
+                    currentBgImage,
+                    displayedTextWithCursor,
+                    fullText,
+
+                    nodes: computed(() => state.nodes),
+                    sectors: computed(() => state.sectors),
+                    edges: computed(() => state.edges),
+                    visibleNodes,
+                    isCompanyVisible,
+                    isNodeDimmed,
+
+                    zoomScale,
+                    stageTransform,
+                    stageDimensions,
+                    stageViewBox,
+                    stageWrapper,
+                    zoomIn,
+                    zoomOut,
+                    resetZoom,
+                    resetView,
+                    focusOnNode,
+                    focusOnRoot,
+                    onWheel,
+                    onDragStart,
+                    onDragMove,
+                    onDragEnd,
+
+                    getNodeById,
+                    getEdgePath,
+                    handleSelectNode,
+                    handleFocus,
+                    handleSearch,
+                    closeNodeInfo,
+                    handleGraphClick,
+                    isEdgeActive,
+                    isEdgeDimmed,
+                    playNarration,
+                    stopNarration,
+                    playGreeting,
+                    onHumanVideoReady,
+                    onHumanVideoError,
+                    onNarrationStart,
+                    onNarrationPause,
+                    onNarrationEnd,
+                    continueIntroduction,
+                    openGraduateVideo,
+                    onGraduateVideoError,
+                    closeGraduateVideo,
+                    resolveMediaPath,
+                    chooseBackgroundPreset,
+                    handleBackgroundUpload,
+                    resetBackground,
+                    handleFileUpload,
+                    activeContent,
+                    narrationText,
+                    switchBackground
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
