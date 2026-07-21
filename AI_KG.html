@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>百路同源 · 一心交投 V14</title>
+    <title>浙江交投AI知识图谱智能体 V4</title>
 
     <!-- Vue3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
@@ -1700,6 +1700,9 @@
         .header-import input { display:none }
         .tour-btn { height:32px;padding:0 13px;border:1px solid #347386;border-radius:8px;background:rgba(12,37,48,.88);color:#bfe5ed;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap }
         .tour-btn:hover,.tour-btn.active { border-color:#50dfad;color:#8ff0ca;background:#103c31;box-shadow:0 0 16px rgba(80,223,173,.18) }
+        .tour-btn.next-company { border-color:#426f91;color:#d4eaff;background:rgba(15,42,61,.9) }
+        .tour-btn.next-company:hover:not(:disabled) { border-color:#65bde8;color:#fff;background:#164863 }
+        .tour-btn:disabled { opacity:.38;cursor:not-allowed;box-shadow:none }
         .node.tour-active { z-index:20;animation:tourNodeBreathe 1.45s ease-in-out infinite !important;border-color:#fff !important }
         @keyframes tourNodeBreathe {
             0%,100% { transform:translate(-50%,-50%) scale(1);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent),0 0 18px var(--c) }
@@ -1795,6 +1798,42 @@
             line-height:1.75;
             color:#c7dce3;
         }
+
+        /* ===== V2 定制优化 ===== */
+        .app-header h1 {
+            font-size:33px;
+            font-weight:950;
+            letter-spacing:6px;
+            background:linear-gradient(180deg,#f4feff 0%,#8cebf3 35%,#36bdd5 68%,#1686ae 100%);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            filter:drop-shadow(0 2px 0 rgba(3,52,72,.95)) drop-shadow(0 5px 8px rgba(45,205,227,.28));
+            text-shadow:0 1px 0 rgba(255,255,255,.28);
+        }
+        .sidebar-left .sidebar-body {
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            gap:7px;
+            height:100%;
+            zoom:1;
+            padding:4px 5px 3px !important;
+        }
+        .sidebar-left .sidebar-body > * { flex-shrink:0 }
+        .sidebar-left .sidebar-body > div:nth-child(2) { margin-top:0 !important }
+        .sidebar-left .sidebar-body > div:nth-child(2) > div:first-child { margin-bottom:5px !important }
+        .sidebar-left .goal-card { min-height:63px;padding:7px 5px }
+        .sidebar-left .chart-box { margin-bottom:0;padding:6px 8px 3px }
+        .sidebar-left .chart-row-2 { margin-bottom:0 }
+
+        .company-summary-v10 article:nth-child(1) header b { color:#62dce8 }
+        .company-summary-v10 article:nth-child(2) header b { color:#72d9ad }
+        .company-summary-v10 article:nth-child(3) header b { color:#f2bd73 }
+        .company-summary-v10 header b { font-size:18px;font-weight:900;letter-spacing:1px }
+        .company-summary-v10 header > span { font-size:25px }
+
+        .human-top { justify-content:flex-start }
+        .human-top b { font-size:16px;letter-spacing:1px;color:#dffbff }
     </style>
 </head>
 
@@ -1803,7 +1842,7 @@
 
         <!-- ===== 头部 ===== -->
         <header class="app-header">
-            <h1>百路同源 · 一心交投 做有担当的开路人</h1>
+            <h1>浙江交投AI知识图谱智能体</h1>
             <div class="header-actions">
                 <label class="header-import">📁 导入 Excel<input type="file" accept=".xlsx,.xls" @change="handleFileUpload" /></label>
                 <button class="btn-bg" @click="showBackgroundPanel = !showBackgroundPanel">▧ 背景</button>
@@ -1944,16 +1983,16 @@
                                             <stop offset="100%" stop-color="#4ad4e0" stop-opacity="0.02"/>
                                         </linearGradient>
                                     </defs>
-                                    <polygon points="20,74 60,64 100,56 140,36 180,24 220,28 260,12 300,16 300,74 20,74" fill="url(#gradRevenue)"/>
-                                    <polyline points="20,69 60,67 100,59 140,40 180,28 220,30 260,14 300,18" fill="none" stroke="#4ad4e0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polygon points="20,69 60,67 100,57 140,35 180,32 220,29 260,28 300,24 300,74 20,74" fill="url(#gradRevenue)"/>
+                                    <polyline points="20,69 60,67 100,57 140,35 180,32 220,29 260,28 300,24" fill="none" stroke="#4ad4e0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     <circle cx="20" cy="69" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
                                     <circle cx="60" cy="67" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
-                                    <circle cx="100" cy="59" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
-                                    <circle cx="140" cy="40" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
-                                    <circle cx="180" cy="28" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
-                                    <circle cx="220" cy="30" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
-                                    <circle cx="260" cy="14" r="4.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5" style="filter:drop-shadow(0 0 6px rgba(74,212,224,0.5));"/>
-                                    <circle cx="300" cy="18" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="100" cy="57" r="3.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="140" cy="35" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="180" cy="32" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="220" cy="29" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
+                                    <circle cx="260" cy="28" r="4.5" fill="#4ad4e0" stroke="#061018" stroke-width="1.5" style="filter:drop-shadow(0 0 6px rgba(74,212,224,0.5));"/>
+                                    <circle cx="300" cy="24" r="4" fill="#4ad4e0" stroke="#061018" stroke-width="1.5"/>
                                     <text x="20" y="84" font-size="8" fill="#506a75" text-anchor="middle">2018</text>
                                     <text x="60" y="84" font-size="8" fill="#506a75" text-anchor="middle">2019</text>
                                     <text x="100" y="84" font-size="8" fill="#506a75" text-anchor="middle">2020</text>
@@ -1964,12 +2003,12 @@
                                     <text x="300" y="84" font-size="8" fill="#506a75" text-anchor="middle">2025E</text>
                                     <text x="20" y="63" font-size="7" fill="#8bb4c0" text-anchor="middle">1377</text>
                                     <text x="60" y="61" font-size="7" fill="#8bb4c0" text-anchor="middle">1471</text>
-                                    <text x="100" y="53" font-size="7" fill="#8bb4c0" text-anchor="middle">1944</text>
-                                    <text x="140" y="34" font-size="7" fill="#8bb4c0" text-anchor="middle">2992</text>
-                                    <text x="180" y="22" font-size="7" fill="#8bb4c0" text-anchor="middle">3136</text>
-                                    <text x="220" y="24" font-size="7" fill="#8bb4c0" text-anchor="middle">3288</text>
-                                    <text x="260" y="8" font-size="7" fill="#4ad4e0" text-anchor="middle">3308</text>
-                                    <text x="300" y="12" font-size="7" fill="#506a75" text-anchor="middle">3500</text>
+                                    <text x="100" y="51" font-size="7" fill="#8bb4c0" text-anchor="middle">1944</text>
+                                    <text x="140" y="29" font-size="7" fill="#8bb4c0" text-anchor="middle">2992</text>
+                                    <text x="180" y="26" font-size="7" fill="#8bb4c0" text-anchor="middle">3136</text>
+                                    <text x="220" y="23" font-size="7" fill="#8bb4c0" text-anchor="middle">3288</text>
+                                    <text x="260" y="22" font-size="7" fill="#4ad4e0" text-anchor="middle">3308</text>
+                                    <text x="300" y="18" font-size="7" fill="#506a75" text-anchor="middle">3500</text>
                                 </svg>
                                 <div class="chart-foot">
                                     <span>2018: 1377亿</span>
@@ -2109,6 +2148,7 @@
                         <input class="search-input" v-model.trim="keyword" placeholder="输入单位名称…" />
                         <button class="btn-tool" @click="handleSearch">搜索</button>
                         <button class="tour-btn" :class="{active:isTourMode}" @click="toggleTourMode">{{ isTourMode ? '■ 退出轮播' : '▶ 节点轮播' }}</button>
+                        <button class="tour-btn next-company" :disabled="!isTourMode || !graduateVideoNodes.length" @click="handleNextTourCompany">下一个</button>
                     </div>
 
                     <div v-if="loading" class="loading-overlay">
@@ -2201,8 +2241,7 @@
                 <section class="human-wrap surface" :class="{talking: isSpeaking}">
                     <div class="human-inner">
                         <div class="human-top">
-                            <b>🤖 数字人讲解员</b>
-                            <span class="status-badge">{{ humanStatusLabel }}</span>
+                            <b>🤖 C宝萌星说</b>
                         </div>
 
                         <div class="human-slot">
@@ -2244,9 +2283,10 @@
                         <video
                             ref="carouselVideo"
                             :key="currentGraduateVideo.id + '-' + currentGraduateVideoIndex"
-                            :src="resolveMediaPath(currentGraduateVideo.graduateVideoPath)"
-                            autoplay muted controls playsinline preload="metadata"
-                            @ended="playNextGraduateVideo"
+                            :src="resolveCarouselVideoPath(currentGraduateVideo.graduateVideoPath)"
+                            autoplay :muted="!isTourMode" controls playsinline preload="metadata"
+                            @loadeddata="onCarouselVideoReady"
+                            @ended="handleCarouselVideoEnded"
                             @error="skipBrokenGraduateVideo"
                         ></video>
                         <div class="carousel-caption-v10"><b>{{ currentGraduateVideo.name }}</b><span>应届生风采</span></div>
@@ -2907,6 +2947,7 @@
                 let tourTimer = null;
                 let tourCompanyIndex = 0;
                 let panZoomAnimationToken = 0;
+                let backgroundRequestToken = 0;
 
                 const currentBgImage = ref('');
                 const showBackgroundPanel = ref(false);
@@ -2964,10 +3005,16 @@
                 }));
 
                 const currentInfoNode = computed(() => {
+                    if (isTourMode.value && tourNodeId.value) {
+                        const tourNode = state.nodes.find(node => node.id === tourNodeId.value);
+                        if (tourNode) return tourNode;
+                    }
                     return selectedNode.value || state.nodes.find(node => node.type === 'root') || state.nodes[0] || null;
                 });
                 const graduateVideoNodes = computed(() => state.nodes.filter(node => {
-                    return String(node.graduateVideoPath || '').trim() && !failedGraduateVideoIds.value.has(node.id);
+                    return node.type === 'company' &&
+                        String(node.graduateVideoPath || '').trim() &&
+                        !failedGraduateVideoIds.value.has(node.id);
                 }));
                 const currentGraduateVideo = computed(() => {
                     const list = graduateVideoNodes.value;
@@ -3012,21 +3059,11 @@
                 }));
 
                 const visibleNodes = computed(() => {
-                    const all = state.nodes;
-                    const expanded = state.expandedSector;
-                    return all.filter(n => {
-                        if (n.type === 'root') return true;
-                        if (n.type === 'sector') return true;
-                        if (n.type === 'company') {
-                            return isTourMode.value || n.sector === expanded;
-                        }
-                        return false;
-                    });
+                    return state.nodes;
                 });
 
                 const isCompanyVisible = (node) => {
-                    if (node.type !== 'company') return true;
-                    return isTourMode.value || node.sector === state.expandedSector;
+                    return true;
                 };
 
                 const isNodeDimmed = (node) => {
@@ -3130,7 +3167,11 @@
                     const padding = 70;
                     const contentWidth = Math.max(1, maxX - minX + padding * 2);
                     const contentHeight = Math.max(1, maxY - minY + padding * 2);
-                    const scale = 0.5;
+                    const scale = Math.max(zoomMin, Math.min(
+                        0.5,
+                        (el.clientWidth - 24) / contentWidth,
+                        (el.clientHeight - 24) / contentHeight
+                    ));
                     panZoomAnimationToken++;
                     isAnimating.value = false;
                     zoomScale.value = scale;
@@ -3220,14 +3261,20 @@
 
                 // ===== 手动节点轮播 =====
                 function pauseTourRotation() {
-                    if (tourTimer) clearInterval(tourTimer);
+                    if (tourTimer) clearTimeout(tourTimer);
                     tourTimer = null;
                 }
 
                 function showNextTourCompany() {
-                    if (!isTourMode.value || isSpeaking.value) return;
-                    const companies = state.nodes.filter(node => node.type === 'company');
-                    if (!companies.length) return;
+                    if (!isTourMode.value) return;
+                    const companies = graduateVideoNodes.value;
+                    if (!companies.length) {
+                        stopTourMode();
+                        return;
+                    }
+                    pauseTourRotation();
+                    stopNarration(false);
+                    if (carouselVideo.value) carouselVideo.value.pause();
                     const node = companies[tourCompanyIndex % companies.length];
                     tourCompanyIndex = (tourCompanyIndex + 1) % companies.length;
                     selectedNode.value = node;
@@ -3236,12 +3283,22 @@
                     state.expandedSector = null;
                     filter.value = 'all';
                     switchBackground(node);
+                    currentGraduateVideoIndex.value = companies.findIndex(item => item.id === node.id);
+                    nextTick(() => {
+                        playCarouselVideo(true);
+                        startTourNarrationEffects();
+                    });
+                }
+
+                function handleNextTourCompany() {
+                    if (!isTourMode.value || !graduateVideoNodes.value.length) return;
+                    showNextTourCompany();
                 }
 
                 function resumeTourRotation() {
                     if (!isTourMode.value) return;
-                    pauseTourRotation();
-                    tourTimer = setInterval(showNextTourCompany, 6500);
+                    const video = carouselVideo.value;
+                    if (!video || video.ended) showNextTourCompany();
                 }
 
                 function startTourMode() {
@@ -3255,7 +3312,6 @@
                     nextTick(() => {
                         fitAllTourNodes();
                         showNextTourCompany();
-                        resumeTourRotation();
                         setTimeout(() => {
                             if (isTourMode.value) fitAllTourNodes();
                         }, 500);
@@ -3266,6 +3322,11 @@
                     pauseTourRotation();
                     isTourMode.value = false;
                     tourNodeId.value = '';
+                    stopNarration(true);
+                    if (carouselVideo.value) {
+                        carouselVideo.value.pause();
+                        carouselVideo.value.muted = true;
+                    }
                 }
 
                 function toggleTourMode() {
@@ -3390,11 +3451,21 @@
 
                 // ===== 背景 =====
                 function switchBackground(node) {
-                    if (node && node.bgImage) {
-                        currentBgImage.value = node.bgImage;
-                    } else {
+                    const nextImage = node?.bgImage ? resolveMediaPath(node.bgImage) : '';
+                    const requestToken = ++backgroundRequestToken;
+                    if (!nextImage) {
                         currentBgImage.value = '';
+                        return;
                     }
+                    const image = new Image();
+                    image.onload = () => {
+                        if (requestToken === backgroundRequestToken) currentBgImage.value = nextImage;
+                    };
+                    image.onerror = () => {
+                        if (requestToken === backgroundRequestToken) currentBgImage.value = '';
+                        console.warn('节点背景图加载失败：', nextImage);
+                    };
+                    image.src = nextImage;
                 }
 
                 function chooseBackgroundPreset(value) {
@@ -3553,30 +3624,42 @@
                         normalized : './' + normalized;
                 }
 
+                function resolveCarouselVideoPath(path) {
+                    const resolved = resolveMediaPath(path);
+                    const normalized = resolved.replaceAll('\\', '/');
+                    if (/\/videos\/(ZY|JW)\/answer\.mp4$/i.test(normalized)) {
+                        return normalized.replace(/answer\.mp4$/i, 'answer_web.mp4');
+                    }
+                    return resolved;
+                }
+
                 function startTypewriter(text, callback) {
                     stopTypewriter();
                     fullText.value = text;
                     displayedText.value = '';
                     let index = 0;
-                    const speed = 42;
+                    const speed = 250;
 
                     function type() {
                         if (index < fullText.value.length) {
-                            const char = fullText.value.charAt(index);
-                            if (char === '。' || char === '，' || char === '！' || char === '？') {
-                                displayedText.value += char;
-                                index++;
-                                typewriterTimer.value = setTimeout(type, speed * 1.8);
-                            } else {
-                                displayedText.value += char;
-                                index++;
-                                typewriterTimer.value = setTimeout(type, speed);
-                            }
+                            displayedText.value += fullText.value.charAt(index);
+                            index++;
+                            typewriterTimer.value = setTimeout(type, speed);
                         } else {
                             if (callback) callback();
                         }
                     }
                     type();
+                }
+
+                function startTourNarrationEffects() {
+                    if (!isTourMode.value || !selectedNode.value) return;
+                    const session = ++narrationSession;
+                    isSpeaking.value = true;
+                    showFollowup.value = false;
+                    narrationSource.value = '视频伴随字幕';
+                    startTypewriter(narrationText.value, () => {});
+                    enterSpeakingState(session).catch(() => {});
                 }
 
                 function stopTypewriter() {
@@ -3716,6 +3799,13 @@
                 }
 
                 async function playNarration() {
+                    if (isTourMode.value && selectedNode.value?.graduateVideoPath) {
+                        const videoIndex = graduateVideoNodes.value.findIndex(node => node.id === selectedNode.value.id);
+                        if (videoIndex >= 0) currentGraduateVideoIndex.value = videoIndex;
+                        stopNarration(false);
+                        playCarouselVideo(true);
+                        return;
+                    }
                     stopNarration(false);
                     const session = ++narrationSession;
                     showFollowup.value = false;
@@ -3784,28 +3874,56 @@
                     graduateVideoError.value = '';
                 }
 
-                function playCarouselVideo() {
+                function playCarouselVideo(withSound = false) {
                     nextTick(() => {
                         const video = carouselVideo.value;
                         if (!video) return;
-                        video.muted = true;
+                        video.muted = !withSound;
+                        video.volume = 1;
                         try { video.currentTime = 0; } catch {}
-                        video.play().catch(() => {});
+                        video.load();
+                        video.play().catch(error => {
+                            console.warn('轮播视频等待用户播放：', error);
+                        });
                     });
+                }
+
+                function onCarouselVideoReady() {
+                    const video = carouselVideo.value;
+                    if (!video || !isTourMode.value) return;
+                    video.muted = false;
+                    video.volume = 1;
+                }
+
+                function handleCarouselVideoEnded() {
+                    if (isTourMode.value) {
+                        showNextTourCompany();
+                    } else {
+                        playNextGraduateVideo();
+                    }
                 }
 
                 function playNextGraduateVideo() {
                     const count = graduateVideoNodes.value.length;
                     if (!count) return;
+                    if (isTourMode.value) {
+                        showNextTourCompany();
+                        return;
+                    }
                     currentGraduateVideoIndex.value = (currentGraduateVideoIndex.value + 1) % count;
-                    playCarouselVideo();
+                    playCarouselVideo(false);
                 }
 
                 function playPreviousGraduateVideo() {
                     const count = graduateVideoNodes.value.length;
                     if (!count) return;
+                    if (isTourMode.value) {
+                        tourCompanyIndex = (currentGraduateVideoIndex.value - 1 + count) % count;
+                        showNextTourCompany();
+                        return;
+                    }
                     currentGraduateVideoIndex.value = (currentGraduateVideoIndex.value - 1 + count) % count;
-                    playCarouselVideo();
+                    playCarouselVideo(false);
                 }
 
                 function skipBrokenGraduateVideo() {
@@ -3817,7 +3935,12 @@
                     if (currentGraduateVideoIndex.value >= graduateVideoNodes.value.length) {
                         currentGraduateVideoIndex.value = 0;
                     }
-                    playCarouselVideo();
+                    if (isTourMode.value) {
+                        tourCompanyIndex = currentGraduateVideoIndex.value;
+                        tourTimer = setTimeout(showNextTourCompany, 350);
+                    } else {
+                        playCarouselVideo(false);
+                    }
                 }
 
                 // ===== 核心初始化 =====
@@ -3880,11 +4003,9 @@
                         switchBackground(null);
                         nextTick(() => {
                             requestAnimationFrame(() => {
-                                resetZoom(false);
                                 setTimeout(() => {
-                                    // 聚焦根节点位置，但不选中
-                                    const root = nodes.find(n => n.type === 'root') || nodes[0];
-                                    if (root) focusOnNode(root, 700);
+                                    // 日常状态完整铺开全部板块与子公司节点
+                                    fitAllTourNodes();
                                 }, 300);
                             });
                         });
@@ -4028,11 +4149,9 @@
                             switchBackground(null);
                             nextTick(() => {
                                 requestAnimationFrame(() => {
-                                    resetZoom(false);
                                     setTimeout(() => {
-                                        const root = finalNodes.find(n => n.type === 'root') ||
-                                            finalNodes[0];
-                                        if (root) focusOnNode(root, 600);
+                                        // 新数据导入后同样完整展示全部节点
+                                        fitAllTourNodes();
                                     }, 350);
                                 });
                             });
@@ -4225,6 +4344,7 @@
                     handleFocus,
                     handleSearch,
                     toggleTourMode,
+                    handleNextTourCompany,
                     closeNodeInfo,
                     handleGraphClick,
                     isEdgeActive,
@@ -4243,8 +4363,11 @@
                     closeGraduateVideo,
                     playNextGraduateVideo,
                     playPreviousGraduateVideo,
+                    onCarouselVideoReady,
+                    handleCarouselVideoEnded,
                     skipBrokenGraduateVideo,
                     resolveMediaPath,
+                    resolveCarouselVideoPath,
                     chooseBackgroundPreset,
                     handleBackgroundUpload,
                     resetBackground,
