@@ -1738,7 +1738,7 @@
 
         <!-- ===== 头部 ===== -->
         <header class="app-header">
-            <h1>百路同源 · 一心交投 <small>做有担当的开路人</small></h1>
+            <h1>百路同源 · 一心交投 做有担当的开路人</h1>
             <div class="header-actions">
                 <label class="header-import">📁 导入 Excel<input type="file" accept=".xlsx,.xls" @change="handleFileUpload" /></label>
                 <button class="btn-bg" @click="showBackgroundPanel = !showBackgroundPanel">▧ 背景</button>
@@ -1817,8 +1817,9 @@
                         <div class="sidebar-body">
                             <!-- 85522 战略目标 -->
                             <div class="goal-grid">
+                                <!-- 原有 6 个目标卡片（保持不变） -->
                                 <div class="goal-card goal-highlight">
-                                    <div style="font-size:18px;color:#4ad4e0;font-weight:600;">2030</div>
+                                    <div style="font-size:24px;color:#4ad4e0;font-weight:600;">2030</div>
                                     <div style="font-size:16px;">战略目标</div>
                                 </div>
                                 <div class="goal-card">
@@ -1841,9 +1842,26 @@
                                     <div class="num">20<small class="unit">%+</small></div>
                                     <div class="label">国际化程度</div>
                                 </div>
-                                
                             </div>
 
+                            <!-- 新增里程碑 – 透明背景，蓝色字体，和谐边框 -->
+                            <div style="margin-top: 28px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+                                    <span style="font-size: 17px; font-weight: 600; color: #0f9d8c;">📌 关键里程碑</span>
+                                </div>
+                                <div class="goal-grid" style="grid-template-columns: repeat(2, 1fr); gap: 14px;">
+                                    <!-- 里程碑卡片 1 -->
+                                    <div class="goal-card" style="background: transparent; border: 1px solid #d0e2f2; border-radius: 20px; padding: 20px 10px 16px; text-align: center; min-height: 100px; transition: 0.2s;">
+                                        <div style="font-size: 30px; font-weight: 700; color: #4ad4e0; line-height: 1.2;">2021</div>
+                                        <div style="font-size: 15px; font-weight: 500; color: #4d6278; margin-top: 6px;">首入世界500强</div>
+                                    </div>
+                                    <!-- 里程碑卡片 2 -->
+                                    <div class="goal-card" style="background: transparent; border: 1px solid #d0e2f2; border-radius: 20px; padding: 20px 10px 16px; text-align: center; min-height: 100px; transition: 0.2s;">
+                                        <div style="font-size: 30px; font-weight: 700; color: #4ad4e0; line-height: 1.2;">2024</div>
+                                        <div style="font-size: 15px; font-weight: 500; color: #4d6278; margin-top: 6px;">资产破万亿</div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- 营收增长折线图 -->
                             <div class="chart-box">
                                 <div class="chart-head">
@@ -2008,19 +2026,6 @@
                                 </div>
                             </div>
 
-                            <!-- 底部：关键里程碑 -->
-                            <div class="milestone-box">
-                                <div class="milestone-head">
-                                    <span class="label">📌 关键里程碑</span>
-                                    <span>数据来源：公开年报</span>
-                                </div>
-                                <div class="milestone-grid">
-                                    <div><div class="year">2021</div><div class="desc">首入世界500强</div></div>
-                                    <div><div class="year">2022</div><div class="desc">营收突破3000亿</div></div>
-                                    <div><div class="year">2024</div><div class="desc">资产破万亿</div></div>
-                                </div>
-                            </div>
-                        </div>
                     </template>
                     <!-- ====== 结束视图切换 ====== -->
 
