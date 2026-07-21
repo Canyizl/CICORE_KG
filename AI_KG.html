@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>百路同源 · 一心交投 V12</title>
+    <title>百路同源 · 一心交投 V14</title>
 
     <!-- Vue3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
@@ -1730,6 +1730,71 @@
             .sidebar-left { min-height:620px;max-height:none }.center-column-v10 { min-height:760px }.sidebar-right { min-height:720px;max-height:none }
             .app-header h1 { position:static;transform:none }.app-header { justify-content:space-between }
         }
+
+        /* ===== V14 视觉与空间优化 ===== */
+        .app-header h1 {
+            font-family:"Microsoft YaHei","微软雅黑",sans-serif;
+            font-size:29px;
+            font-weight:950;
+            letter-spacing:5px;
+            background:linear-gradient(135deg,#e9fdff 0%,#72e5ed 36%,#32b6d5 72%,#9ff4e0 100%);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            text-shadow:0 6px 28px rgba(74,212,224,.22);
+        }
+        .app-header h1 small { font-size:13px;font-weight:600;letter-spacing:1.5px }
+
+        .sidebar-left .sidebar-inner { padding:9px 10px 8px }
+        .sidebar-left .sidebar-title { padding-bottom:7px;margin-bottom:6px }
+        .sidebar-left .sidebar-body {
+            overflow:hidden !important;
+            padding:5px 7px 6px !important;
+            zoom:.86;
+            width:100%;
+        }
+        .sidebar-left .goal-grid { gap:7px !important;margin-bottom:7px }
+        .sidebar-left .goal-card { min-height:70px;padding:9px 5px }
+        .sidebar-left .chart-box { margin-bottom:6px;padding:7px 8px 4px }
+        .sidebar-left .chart-row-2 { gap:5px;margin-bottom:6px }
+        .sidebar-left .sidebar-body > div:nth-child(2) { margin-top:8px !important }
+        .sidebar-left .sidebar-body > div:nth-child(2) > div:first-child { margin-bottom:6px !important }
+
+        .sidebar-right { grid-template-rows:minmax(0,1fr) minmax(0,1fr) }
+        .sidebar-right .human-wrap { grid-template-rows:minmax(0,1fr) 32px 43px }
+        .sidebar-right .subtitle-wrap {
+            width:auto;
+            margin:0 12px;
+            padding:0;
+            border:0;
+            border-radius:0;
+            background:transparent;
+            box-shadow:none;
+        }
+        .human-subtitle-v10 .subtitle-inner { height:32px }
+        .human-subtitle-v10 .subtitle-text {
+            height:32px;
+            padding:3px 2px;
+            border:0;
+            border-radius:0;
+            background:transparent;
+            box-shadow:none;
+            color:#effcff;
+            font-size:14px;
+            line-height:26px;
+            text-align:center;
+        }
+        .human-subtitle-v10 .subtitle-text .text-content { min-width:100%;text-align:center }
+        .sidebar-right .human-actions { margin:0 12px 9px;justify-content:center;align-items:center;gap:9px;flex-wrap:nowrap }
+        .sidebar-right .human-actions .voice-btn { flex:1;height:32px;padding:3px 8px;font-size:11px }
+
+        .company-summary-v10 header b { font-family:"Microsoft YaHei","微软雅黑",sans-serif;font-size:15px;font-weight:800 }
+        .company-summary-v10 p {
+            font-family:"Microsoft YaHei","微软雅黑",sans-serif;
+            font-size:14px;
+            font-weight:600;
+            line-height:1.75;
+            color:#c7dce3;
+        }
     </style>
 </head>
 
@@ -2152,19 +2217,20 @@
 
                         <audio ref="narrationAudio" preload="metadata" @play="onNarrationStart" @ended="onNarrationEnd" @pause="onNarrationPause"></audio>
 
-                        <div class="human-actions">
-                            <button class="voice-btn" @click="playNarration">▶ 播报</button>
-                            <button class="voice-btn stop" @click="stopNarration">■ 中断</button>
-                        </div>
                     </div>
 
-                    <!-- 字幕已合并到数字人面板底部 -->
+                    <!-- 最新一句字幕紧贴数字人下方 -->
                     <div class="subtitle-wrap" :class="{playing: isSpeaking}">
                     <div class="subtitle-inner">
-                        <div ref="liveSubtitleLine" class="subtitle-text" :title="displayedText || narrationText">
-                            <div class="text-content" v-html="displayedTextWithCursor"></div>
+                        <div class="subtitle-text" :title="latestSubtitleText">
+                            <div class="text-content">{{ latestSubtitleText }}<span v-if="isSpeaking" class="cursor-blink"></span></div>
                         </div>
                     </div>
+                    </div>
+
+                    <div class="human-actions">
+                        <button class="voice-btn" @click="playNarration">▶ 开始播报</button>
+                        <button class="voice-btn stop" @click="stopNarration">■ 中断播报</button>
                     </div>
                 </section>
                 </div>
@@ -3008,12 +3074,7 @@
                 function resetZoom(animate = true) {
                     const el = stageWrapper.value;
                     if (!el) return;
-                    const scale = Math.min(
-                        (el.clientWidth - 30) / state.layout.width,
-                        (el.clientHeight - 30) / state.layout.height,
-                        1
-                    );
-                    const targetScale = Math.max(zoomMin, Math.min(zoomMax, scale));
+                    const targetScale = 0.5;
                     const targetPanX = (el.clientWidth - state.layout.width * targetScale) / 2;
                     const targetPanY = (el.clientHeight - state.layout.height * targetScale) / 2;
                     if (animate) {
@@ -3069,11 +3130,7 @@
                     const padding = 70;
                     const contentWidth = Math.max(1, maxX - minX + padding * 2);
                     const contentHeight = Math.max(1, maxY - minY + padding * 2);
-                    const rawScale = Math.min(1,
-                        (el.clientWidth - 20) / contentWidth,
-                        (el.clientHeight - 20) / contentHeight
-                    );
-                    const scale = Math.max(0.18, Math.min(0.88, rawScale * 0.78));
+                    const scale = 0.5;
                     panZoomAnimationToken++;
                     isAnimating.value = false;
                     zoomScale.value = scale;
@@ -3088,11 +3145,12 @@
                         containerH = el.clientHeight;
                     const nodeX = node.x || 0,
                         nodeY = node.y || 0;
-                    const targetScale = Math.min(
-                        (containerW - 80) / 380,
-                        (containerH - 80) / 380,
-                        1.2
-                    );
+                    const targetScale = node.type === 'company' ? 0.7 :
+                        node.type === 'root' ? 0.5 : Math.min(
+                            (containerW - 80) / 480,
+                            (containerH - 80) / 480,
+                            0.85
+                        );
                     const targetScaleClamped = Math.max(zoomMin, Math.min(zoomMax, targetScale));
                     const targetPanX = containerW / 2 - nodeX * targetScaleClamped;
                     const targetPanY = containerH / 2 - nodeY * targetScaleClamped;
@@ -3107,7 +3165,7 @@
                         state.expandedSector = null;
                         filter.value = 'all';
                         activeTab.value = 'overview';
-                        nextTick(() => resetZoom(true));
+                        nextTick(() => focusOnNode(root, 500));
                     }
                 }
 
@@ -3533,6 +3591,20 @@
                     const isComplete = text.length >= (fullText.value || '').length;
                     const cursor = isComplete ? '' : '<span class="cursor-blink"></span>';
                     return text + cursor;
+                });
+
+                const latestSubtitleText = computed(() => {
+                    const text = String(displayedText.value || '').trim();
+                    if (!text) return '';
+                    const punctuation = /[。！？!?；;]/;
+                    let searchFrom = text.length - 1;
+                    if (punctuation.test(text.charAt(text.length - 1))) searchFrom--;
+                    for (let index = searchFrom; index >= 0; index--) {
+                        if (punctuation.test(text.charAt(index))) {
+                            return text.slice(index + 1).trim();
+                        }
+                    }
+                    return text;
                 });
 
                 function onNarrationStart() {
@@ -4121,6 +4193,7 @@
                     liveSubtitleLine,
                     displayedText,
                     displayedTextWithCursor,
+                    latestSubtitleText,
                     fullText,
 
                     nodes: computed(() => state.nodes),
